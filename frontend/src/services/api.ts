@@ -155,6 +155,22 @@ export const api = {
     return res.json();
   },
 
+  async fetchIOCsByCVE(cveId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/iocs/fetch-by-cve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
+      body: JSON.stringify({ cve_id: cveId }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to fetch IOCs for CVE' }));
+      throw new Error(err.detail || 'Failed to fetch IOCs for CVE');
+    }
+    return res.json();
+  },
+
   async getIOCDetail(fingerprint: string): Promise<any> {
     const res = await fetch(`${API_BASE}/iocs/detail?fingerprint=${encodeURIComponent(fingerprint)}`, {
       headers: { ...getAuthHeader() },

@@ -148,7 +148,7 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold font-mono text-xs shadow-xs transition-all active:scale-95"
           >
             <Plus className="w-4 h-4" />
-            <span>On-Demand IOC Query</span>
+            <span>Fetch IOCs by CVE</span>
           </button>
         )}
       </div>

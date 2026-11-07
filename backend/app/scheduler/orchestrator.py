@@ -101,10 +101,12 @@ class IntelligenceOrchestrator:
             cves = list(self.db.cves.find({}, {"cve_id": 1}))
             for c in cves:
                 cid = c["cve_id"]
-                ioc_count = self.db.relationships.count_documents({
-                    "target_id": cid,
-                    "relation_type": "associated_with"
-                })
+                ioc_count = self.db.iocs.count_documents({"associated_cves": cid})
+                if ioc_count == 0:
+                    ioc_count = self.db.relationships.count_documents({
+                        "target_id": cid,
+                        "relationship_type": {"$in": ["associated_with", "indicates", "targets"]}
+                    })
                 self.db.cves.update_one({"cve_id": cid}, {"$set": {"associated_ioc_count": ioc_count}})
 
             duration = (datetime.now(timezone.utc) - start_time).total_seconds()

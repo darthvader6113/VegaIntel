@@ -1,22 +1,31 @@
 """
 IOC Repository API Router.
-Exposes deduplicated canonical IOCs, today's new detections, on-demand IOC submission,
+Exposes deduplicated canonical IOCs, today's new detections, on-demand CVE-driven IOC discovery,
 and advanced multi-parameter searching & filtering.
 """
 from datetime import datetime, timedelta, timezone
+import logging
+import re
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from app.core.cve_fetcher import CVEIntelligenceFetcher, CVE_PATTERN
 from app.core.deduplicator import DeduplicationEngine
 from app.core.false_positive import inspect_for_false_positive
 from app.database import get_db
 
+logger = logging.getLogger("vegaintel.routers.iocs")
+
 router = APIRouter(prefix="/api/iocs", tags=["IOC Repository"])
 
 
+class CVEFetchRequest(BaseModel):
+    cve_id: str = Field(..., description="Target CVE identifier e.g. CVE-2024-3400")
+
+
 class IOCSubmissionRequest(BaseModel):
-    ioc: str = Field(..., description="Indicator of Compromise value (IP, domain, URL, or hash)")
+    ioc: str = Field(..., description="Indicator value or CVE ID (e.g. CVE-2024-3400 or IP/domain/hash)")
     ioc_type: Optional[str] = Field(None, description="Optional forced type: ip, domain, url, md5, sha1, sha256")
     notes: Optional[str] = "Submitted by analyst for validation and correlation"
     target_cve: Optional[str] = None
@@ -104,18 +113,51 @@ def get_today_new_iocs(limit: int = 50, db=Depends(get_db)):
     }
 
 
-@router.post("/request")
-def request_and_ingest_ioc(req: IOCSubmissionRequest, db=Depends(get_db)):
+@router.post("/fetch-by-cve")
+async def fetch_and_store_cve_iocs_endpoint(req: CVEFetchRequest, db=Depends(get_db)):
     """
-    On-Demand IOC Request & Enrichment endpoint.
-    1. Validates against the False Positive Engine (rejects RFC1918, benign CDNs/apex domains, empty hashes).
-    2. Runs deduplication and normalizes into canonical form.
-    3. Records sighting with analyst notes.
-    4. Correlates with target CVE or malware if provided.
+    Given a CVE identifier (e.g. CVE-2024-3400), queries NIST NVD, CISA KEV,
+    ThreatFox, AlienVault OTX, and URLhaus to discover and ingest all associated network & host IOCs.
+    Deduplicates indicators and persists them into the Canonical IOC Repository.
+    """
+    cve_id = req.cve_id.strip().upper()
+    if not CVE_PATTERN.match(cve_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid CVE format: '{req.cve_id}'. Expected format is CVE-YYYY-NNNN (e.g. CVE-2024-3400)."
+        )
+
+    fetcher = CVEIntelligenceFetcher(db)
+    try:
+        result = await fetcher.fetch_and_store_cve_iocs(cve_id)
+        return result
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Error executing CVE-driven IOC discovery for {cve_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch IOCs for {cve_id}: {str(e)}")
+
+
+@router.post("/request")
+async def request_and_ingest_ioc(req: IOCSubmissionRequest, db=Depends(get_db)):
+    """
+    On-Demand Threat Intelligence & IOC Ingestion endpoint.
+    If the user provides a CVE-{number}, it triggers full CVE intelligence discovery
+    and pulls in all associated indicators automatically!
+    Otherwise, it validates through the False Positive Engine and ingests the single IOC.
     """
     raw = req.ioc.strip()
     if not raw:
-        raise HTTPException(status_code=400, detail="IOC string cannot be empty.")
+        raise HTTPException(status_code=400, detail="Input value cannot be empty.")
+
+    # Check if input is a CVE identifier
+    if CVE_PATTERN.match(raw.upper()):
+        fetcher = CVEIntelligenceFetcher(db)
+        try:
+            return await fetcher.fetch_and_store_cve_iocs(raw.upper())
+        except Exception as e:
+            logger.error(f"Error handling CVE-based request for {raw}: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
 
     engine = DeduplicationEngine(db)
     is_new, fp, res = engine.ingest_ioc_sighting(

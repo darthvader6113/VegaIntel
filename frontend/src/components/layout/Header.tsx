@@ -78,14 +78,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* On-Demand Request IOC button */}
+        {/* CVE-Driven IOC Discovery button */}
         <button
           type="button"
           onClick={onRequestIocOpen}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-mono font-semibold border border-slate-200 shadow-xs hover:border-slate-300 transition-all"
         >
           <Plus className="w-3.5 h-3.5 text-orange-600" />
-          <span className="hidden sm:inline">Request IOC</span>
+          <span className="hidden sm:inline">Fetch IOCs by CVE</span>
         </button>
 
         {/* Manual Trigger Sync Button */}

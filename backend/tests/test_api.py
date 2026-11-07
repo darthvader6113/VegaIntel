@@ -111,3 +111,18 @@ def test_correlation_graph(client):
     graph = resp.json()
     assert "nodes" in graph
     assert "edges" in graph
+
+
+def test_fetch_by_cve_discovery(client):
+    resp = client.post("/api/iocs/fetch-by-cve", json={"cve_id": "CVE-2024-3400"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "success"
+    assert data["cve_id"] == "CVE-2024-3400"
+    assert data["summary"]["total_iocs_found"] >= 4
+    assert len(data["iocs"]) >= 4
+    # Check that canonical indicators were stored
+    ioc_resp = client.get("/api/iocs/?q=CVE-2024-3400")
+    assert ioc_resp.status_code == 200
+    assert ioc_resp.json()["total"] >= 1
+

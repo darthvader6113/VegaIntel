@@ -47,10 +47,10 @@ def get_cve_detail(cve_id: str, db=Depends(get_db)):
     # Fetch associated IOC relationships
     ioc_relations = list(db.relationships.find({
         "target_id": cve_id,
-        "relation_type": "associated_with"
+        "relationship_type": {"$in": ["associated_with", "indicates", "targets"]}
     }, {"_id": 0}))
 
-    # Get details of associated IOCs
+    # Get details of associated IOCs from both direct tagging and graph relationships
     associated_fingerprints = [r["source_id"] for r in ioc_relations]
     iocs = list(db.iocs.find({
         "$or": [
@@ -59,16 +59,18 @@ def get_cve_detail(cve_id: str, db=Depends(get_db)):
         ]
     }, {"_id": 0}))
 
-    # Fetch PoCs
+    # Fetch PoCs from both poc_references and pocs collections
     pocs = list(db.poc_references.find({"cve_id": cve_id}, {"_id": 0}))
+    if not pocs:
+        pocs = list(db.pocs.find({"cve_id": cve_id}, {"_id": 0}))
 
     # Fetch Threat Actors exploiting this CVE
     actor_relations = list(db.relationships.find({
         "target_id": cve_id,
-        "relation_type": "exploits_cve"
+        "relationship_type": {"$in": ["exploits", "exploits_cve"]}
     }, {"_id": 0}))
     actors = [r["source_id"] for r in actor_relations]
-    direct_actors = [g["group_id"] for g in db.apt_groups.find({"associated_cves": cve_id}, {"group_id": 1, "_id": 0})]
+    direct_actors = [g["name"] for g in db.apt_groups.find({"associated_cves": cve_id}, {"name": 1, "_id": 0})]
     all_actors = list(set(actors + direct_actors))
 
     return {
