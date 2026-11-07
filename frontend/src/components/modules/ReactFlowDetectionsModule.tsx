@@ -337,13 +337,13 @@ export const ReactFlowDetectionsModule: React.FC<ReactFlowDetectionsModuleProps>
             </Tabs.List>
           </Tabs.Root>
 
-          {/* Request IOC Trigger Button */}
+          {/* Fetch IOCs by CVE Trigger Button */}
           <button
             onClick={onRequestIocOpen}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-xs transition-all active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Request IOC</span>
+            <span>Fetch by CVE</span>
           </button>
 
           <button

@@ -8,6 +8,10 @@ import {
   Activity,
   ArrowUpRight,
   Clock,
+  Radio,
+  CheckCircle2,
+  Users,
+  Binary
 } from 'lucide-react';
 import { OverviewStats } from '../../types';
 
@@ -19,9 +23,9 @@ interface OverviewModuleProps {
 export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigate }) => {
   if (!stats) {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-500 font-mono text-sm">
-        <Activity className="w-5 h-5 animate-spin mr-2 text-orange-600" />
-        Loading threat intelligence metrics...
+      <div className="flex items-center justify-center h-64 text-slate-400 font-mono text-xs gap-2">
+        <Activity className="w-5 h-5 animate-spin text-orange-600" />
+        <span>Loading enterprise intelligence metrics...</span>
       </div>
     );
   }
@@ -29,126 +33,107 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
   const { metrics, feed_statuses, recent_sightings, ioc_type_distribution } = stats;
 
   return (
-    <div className="space-y-6">
-      {/* Top Telemetry Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="w-full space-y-6">
+      {/* Top Enterprise KPI Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Canonical IOCs */}
-        <div className="cyber-card p-5 rounded-xl border border-slate-200 bg-white shadow-sm relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs uppercase font-mono tracking-wider font-semibold">Canonical IOCs</span>
-            <Database className="w-4 h-4 text-orange-600" />
+        <div className="p-5 rounded-xl border border-slate-200/90 bg-white shadow-xs relative overflow-hidden flex flex-col justify-between group hover:border-orange-300 transition-all">
+          <div>
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-[11px] uppercase font-mono tracking-wider font-bold">Canonical IOCs</span>
+              <Database className="w-4 h-4 text-orange-600" />
+            </div>
+            <div className="text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
+              {metrics.total_canonical_iocs.toLocaleString()}
+            </div>
           </div>
-          <div className="text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
-            {metrics.total_canonical_iocs}
-          </div>
-          <div className="mt-2 text-xs text-slate-500 flex items-center justify-between font-mono">
-            <span>Deduplicated Records</span>
+          <div className="mt-3 pt-2 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between font-mono">
+            <span>Collision-Free Records</span>
             <button 
+              type="button"
               onClick={() => onNavigate('iocs')}
-              className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-0.5"
+              className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 transition-colors"
             >
-              Explore <ArrowUpRight className="w-3 h-3" />
+              Explore <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
-          </div>
-        </div>
-
-        {/* Total Sightings */}
-        <div className="cyber-card p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs uppercase font-mono tracking-wider font-semibold">Total Sightings</span>
-            <Layers className="w-4 h-4 text-slate-400" />
-          </div>
-          <div className="text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
-            {metrics.total_sightings}
-          </div>
-          <div className="mt-2 text-xs text-slate-500 font-mono">
-            Across 5 OSINT Feeds
-          </div>
-        </div>
-
-        {/* Deduplication Efficiency */}
-        <div className="cyber-card p-5 rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white shadow-sm">
-          <div className="flex items-center justify-between text-orange-700 mb-2">
-            <span className="text-xs uppercase font-mono tracking-wider font-semibold">Deduplication Savings</span>
-            <Sparkles className="w-4 h-4 text-orange-600" />
-          </div>
-          <div className="text-3xl font-extrabold text-orange-600 font-mono tracking-tight">
-            {metrics.deduplication_ratio_pct}%
-          </div>
-          <div className="mt-2 text-xs text-slate-600 font-mono">
-            <span className="text-slate-900 font-semibold">{metrics.duplicates_prevented}</span> duplicate alerts avoided
           </div>
         </div>
 
         {/* Monitored CVEs */}
-        <div className="cyber-card p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs uppercase font-mono tracking-wider font-semibold">Monitored CVEs</span>
-            <ShieldAlert className="w-4 h-4 text-amber-500" />
+        <div className="p-5 rounded-xl border border-slate-200/90 bg-white shadow-xs flex flex-col justify-between group hover:border-red-300 transition-all">
+          <div>
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-[11px] uppercase font-mono tracking-wider font-bold">Monitored CVEs</span>
+              <ShieldAlert className="w-4 h-4 text-rose-600" />
+            </div>
+            <div className="text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
+              {metrics.monitored_cves.toLocaleString()}
+            </div>
           </div>
-          <div className="text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
-            {metrics.monitored_cves}
-          </div>
-          <div className="mt-2 text-xs text-slate-500 flex items-center justify-between font-mono">
-            <span className="text-red-600 font-semibold">{metrics.critical_cves} Critical Severity</span>
+          <div className="mt-3 pt-2 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between font-mono">
+            <span className="text-rose-600 font-semibold">{metrics.critical_cves} Critical (KEV)</span>
             <button 
+              type="button"
               onClick={() => onNavigate('cves')}
-              className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-0.5"
+              className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 transition-colors"
             >
-              View <ArrowUpRight className="w-3 h-3" />
+              Inspect <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Section 3 Deduplication Architecture Feature Box */}
-      <div className="cyber-card p-6 rounded-xl border border-orange-200 bg-white shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm" />
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-mono">
-              Deterministic Deduplication Pipeline (Section 3 Spec)
-            </h2>
+        {/* Threat Actors & Campaigns */}
+        <div className="p-5 rounded-xl border border-slate-200/90 bg-white shadow-xs flex flex-col justify-between group hover:border-purple-300 transition-all">
+          <div>
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-[11px] uppercase font-mono tracking-wider font-bold">Attributed APTs</span>
+              <Users className="w-4 h-4 text-purple-600" />
+            </div>
+            <div className="text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
+              {metrics.active_threat_actors}
+            </div>
           </div>
-          <span className="text-xs text-orange-700 font-mono bg-orange-50 px-2.5 py-1 rounded border border-orange-200 font-medium">
-            fingerprint = normalized_ioc_type + &quot;:&quot; + normalized_ioc_value
-          </span>
-        </div>
-        
-        <p className="text-xs text-slate-600 leading-relaxed mb-4">
-          When multiple OSINT feeds report identical indicators for vulnerabilities (e.g. AlienVault OTX, ThreatFox, and URLhaus tracking <code className="text-orange-700 bg-orange-50 px-1 py-0.5 rounded border border-orange-200">oast.live</code> or <code className="text-orange-700 bg-orange-50 px-1 py-0.5 rounded border border-orange-200">tempmicrosoft.com</code>), VegaIntel upserts a single canonical record with an atomic counter, while cataloging every observation in an immutable sightings log and maintaining decoupled threat relationships.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
-          <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-            <span className="text-slate-500 block mb-1">Raw Observations</span>
-            <span className="text-lg font-bold text-slate-900">{metrics.total_sightings} Sightings</span>
-            <span className="text-[10px] text-slate-500 block mt-1">Multi-source telemetry</span>
-          </div>
-          <div className="p-3 rounded-lg bg-orange-50 border border-orange-200">
-            <span className="text-orange-700 block mb-1 font-semibold">Canonical Database</span>
-            <span className="text-lg font-bold text-orange-700">{metrics.total_canonical_iocs} Unique IOCs</span>
-            <span className="text-[10px] text-orange-600 block mt-1">100% collision-free</span>
-          </div>
-          <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-            <span className="text-emerald-700 block mb-1 font-semibold">Noise Reduction</span>
-            <span className="text-lg font-bold text-emerald-700">{metrics.deduplication_ratio_pct}% Deduplicated</span>
-            <span className="text-[10px] text-emerald-600 block mt-1">{metrics.duplicates_prevented} duplicate records prevented</span>
+          <div className="mt-3 pt-2 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between font-mono">
+            <span>{metrics.malware_families} Malware Tools</span>
+            <button 
+              type="button"
+              onClick={() => onNavigate('apt')}
+              className="text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-1 transition-colors"
+            >
+              Actors <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
+
+        {/* Deduplication Savings Ratio */}
+        <div className="p-5 rounded-xl border border-orange-200/90 bg-gradient-to-br from-orange-50/60 to-white shadow-xs flex flex-col justify-between group hover:border-orange-300 transition-all">
+          <div>
+            <div className="flex items-center justify-between text-orange-700 mb-2">
+              <span className="text-[11px] uppercase font-mono tracking-wider font-bold">Deduplication Savings</span>
+              <Sparkles className="w-4 h-4 text-orange-600" />
+            </div>
+            <div className="text-3xl font-extrabold text-orange-600 font-mono tracking-tight">
+              {metrics.deduplication_ratio_pct}%
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-orange-100 text-xs text-slate-600 flex items-center justify-between font-mono">
+            <span><strong>{metrics.duplicates_prevented.toLocaleString()}</strong> duplicate alerts filtered</span>
+          </div>
+        </div>
       </div>
 
-      {/* Grid: Feed Health & IOC Type Distribution */}
+      {/* OSINT Feeds Status & Indicator Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Feed Health Panel */}
-        <div className="lg:col-span-2 cyber-card p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+        {/* Active OSINT Feeds Matrix */}
+        <div className="lg:col-span-2 p-5 rounded-xl border border-slate-200/90 bg-white shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
               <Server className="w-4 h-4 text-orange-600" />
-              OSINT Feeds &amp; Enrichment Sources
+              OSINT Threat Feeds &amp; Ingestion Pipeline
             </h3>
-            <span className="text-xs font-mono text-slate-500">
-              {feed_statuses.length} Sources Active
+            <span className="text-[11px] font-mono text-emerald-700 font-bold px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {feed_statuses.length} ACTIVE FEEDS
             </span>
           </div>
 
@@ -156,26 +141,26 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
             {feed_statuses.map((feed) => (
               <div 
                 key={feed.feed_name}
-                className="p-3 rounded-lg bg-slate-50 border border-slate-200 hover:border-slate-300 transition-all flex items-start justify-between"
+                className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-slate-300 transition-all flex items-start justify-between"
               >
-                <div>
-                  <div className="font-semibold text-xs text-slate-900">{feed.feed_name}</div>
-                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
-                    {feed.total_records_ingested} ingested · {feed.unique_iocs_contributed} unique
+                <div className="space-y-1 min-w-0">
+                  <div className="font-bold text-xs font-mono text-slate-900 truncate">{feed.feed_name}</div>
+                  <div className="text-[11px] text-slate-500 font-mono">
+                    {feed.total_records_ingested.toLocaleString()} records ingested · {feed.unique_iocs_contributed} canonical
                   </div>
                   {feed.last_successful_sync && (
-                    <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1 mt-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(feed.last_successful_sync).toLocaleTimeString()}
+                    <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1 pt-0.5">
+                      <Clock className="w-3 h-3 text-slate-400" />
+                      Last synced: {new Date(feed.last_successful_sync).toLocaleTimeString()}
                     </div>
                   )}
                 </div>
-                <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded border ${
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border shrink-0 ${
                   feed.status === 'HEALTHY' 
-                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                     : feed.status === 'SYNCING'
-                    ? 'bg-amber-100 text-amber-800 border-amber-200 animate-pulse'
-                    : 'bg-red-100 text-red-800 border-red-200'
+                    ? 'bg-amber-50 text-amber-800 border-amber-200 animate-pulse'
+                    : 'bg-rose-50 text-rose-800 border-rose-200'
                 }`}>
                   {feed.status}
                 </span>
@@ -184,24 +169,30 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
           </div>
         </div>
 
-        {/* IOC Type Breakdown */}
-        <div className="cyber-card p-5 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <Database className="w-4 h-4 text-orange-600" />
-              IOC Type Distribution
-            </h3>
-            <div className="space-y-3">
+        {/* IOC Indicator Distribution */}
+        <div className="p-5 rounded-xl border border-slate-200/90 bg-white shadow-xs flex flex-col justify-between space-y-4">
+          <div className="space-y-4">
+            <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+              <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <Database className="w-4 h-4 text-orange-600" />
+                Indicator Breakdown
+              </h3>
+              <span className="text-[11px] font-mono text-slate-400">
+                {metrics.total_canonical_iocs} Total
+              </span>
+            </div>
+
+            <div className="space-y-3 font-mono">
               {ioc_type_distribution.map((item) => {
                 const total = metrics.total_canonical_iocs || 1;
                 const pct = Math.round((item.count / total) * 100);
                 return (
-                  <div key={item.type}>
-                    <div className="flex justify-between text-xs mb-1 font-mono">
-                      <span className="uppercase text-slate-700 font-semibold">{item.type}</span>
-                      <span className="text-slate-500">{item.count} ({pct}%)</span>
+                  <div key={item.type} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="uppercase text-slate-700 font-bold">{item.type}</span>
+                      <span className="text-slate-500 font-medium">{item.count.toLocaleString()} ({pct}%)</span>
                     </div>
-                    <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                       <div 
                         className="bg-orange-500 h-full rounded-full transition-all duration-500"
                         style={{ width: `${pct}%` }}
@@ -213,7 +204,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between text-xs font-mono text-slate-500">
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-mono text-slate-500">
             <span>Threat Actors: <strong className="text-slate-900">{metrics.active_threat_actors}</strong></span>
             <span>Malware: <strong className="text-slate-900">{metrics.malware_families}</strong></span>
             <span>PoCs: <strong className="text-slate-900">{metrics.poc_references}</strong></span>
@@ -221,51 +212,53 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
         </div>
       </div>
 
-      {/* Recent Feed Sightings Stream */}
-      <div className="cyber-card p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+      {/* Live Threat Sightings Stream */}
+      <div className="rounded-xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-900 uppercase tracking-wider">
             <Activity className="w-4 h-4 text-orange-600" />
-            Live Ingestion Sightings Stream
-          </h3>
-          <span className="text-xs text-slate-500 font-mono">Real-time incoming telemetry</span>
+            <span>Real-Time Incoming Sightings Stream</span>
+          </div>
+          <span className="text-[11px] font-mono text-slate-400">
+            Immutable observation log across feeds
+          </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-w-0">
           <table className="w-full text-left text-xs font-mono">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500 uppercase text-[11px] bg-slate-50">
-                <th className="py-2.5 px-3">Timestamp</th>
-                <th className="py-2.5 px-3">Canonical Fingerprint</th>
-                <th className="py-2.5 px-3">Source Feed</th>
-                <th className="py-2.5 px-3">Associated Context</th>
-                <th className="py-2.5 px-3 text-right">Confidence</th>
+              <tr className="border-b border-slate-200 text-slate-500 uppercase text-[11px] bg-slate-50/80">
+                <th className="py-3 px-4 font-semibold">Timestamp</th>
+                <th className="py-3 px-4 font-semibold">Canonical Fingerprint</th>
+                <th className="py-3 px-4 font-semibold">Source Feed</th>
+                <th className="py-3 px-4 font-semibold">Correlated Threat Entity</th>
+                <th className="py-3 px-4 font-semibold text-right">Confidence</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {recent_sightings.map((s, idx) => (
-                <tr key={s.sighting_id || idx} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-2.5 px-3 text-slate-500">
+                <tr key={s.sighting_id || idx} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="py-2.5 px-4 text-slate-500">
                     {new Date(s.observed_at).toLocaleTimeString()}
                   </td>
-                  <td className="py-2.5 px-3 text-slate-900 font-semibold">
+                  <td className="py-2.5 px-4 text-slate-900 font-bold truncate max-w-xs">
                     {s.ioc_fingerprint}
                   </td>
-                  <td className="py-2.5 px-3">
-                    <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                  <td className="py-2.5 px-4">
+                    <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-medium">
                       {s.source}
                     </span>
                   </td>
-                  <td className="py-2.5 px-3 text-slate-600">
+                  <td className="py-2.5 px-4 text-slate-600">
                     {s.associated_cve && (
-                      <span className="text-orange-600 font-semibold mr-2">{s.associated_cve}</span>
+                      <span className="text-orange-600 font-bold mr-2">{s.associated_cve}</span>
                     )}
                     {s.associated_malware && (
-                      <span className="text-amber-700 font-medium">{s.associated_malware}</span>
+                      <span className="text-purple-700 font-semibold">{s.associated_malware}</span>
                     )}
                     {!s.associated_cve && !s.associated_malware && <span className="text-slate-400">—</span>}
                   </td>
-                  <td className="py-2.5 px-3 text-right font-bold text-emerald-600">
+                  <td className="py-2.5 px-4 text-right font-bold text-emerald-600">
                     {s.feed_confidence}%
                   </td>
                 </tr>
