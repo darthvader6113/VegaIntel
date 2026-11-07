@@ -74,3 +74,4 @@ else
     export PYTHONPATH="backend"
     python3 -m uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
 fi
+
