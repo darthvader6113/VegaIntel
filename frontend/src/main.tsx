@@ -1,11 +1,13 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary fallbackTitle="Enterprise Threat Intelligence Platform">
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>,
-)
-
+);

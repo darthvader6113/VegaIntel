@@ -28,11 +28,22 @@ export const api = {
     return data;
   },
 
-  async register(email: string, password: string, fullName?: string, org?: string, recaptchaToken?: string): Promise<{ access_token: string; user: any }> {
+  async register(
+    emailOrPayload: string | { email: string; password: string; full_name?: string; organization?: string; recaptcha_token?: string },
+    password?: string,
+    fullName?: string,
+    org?: string,
+    recaptchaToken?: string
+  ): Promise<{ access_token: string; user: any }> {
+    const payload =
+      typeof emailOrPayload === 'object'
+        ? emailOrPayload
+        : { email: emailOrPayload, password: password!, full_name: fullName, organization: org, recaptcha_token: recaptchaToken };
+
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, full_name: fullName, organization: org, recaptcha_token: recaptchaToken }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Registration failed' }));

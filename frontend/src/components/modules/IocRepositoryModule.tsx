@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs } from '@ark-ui/react';
 import {
   Search,
   Database,
@@ -90,56 +89,55 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
     <div className="w-full space-y-6">
       {/* Time Range Quick Filter Tabs */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <Tabs.Root
-          value={timeRange}
-          onValueChange={(details) => setTimeRange(details.value)}
-          className="flex items-center"
-        >
-          <Tabs.List className="flex items-center gap-1.5 p-1 rounded-xl bg-white border border-slate-200 shadow-xs font-mono text-xs">
-            <Calendar className="w-4 h-4 text-orange-600 ml-2 mr-1" />
-            <Tabs.Trigger
-              value="all"
-              className={`px-3 py-1.5 rounded-lg transition-all font-semibold ${
-                timeRange === 'all'
-                  ? 'bg-orange-500 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              All Canonical IOCs
-            </Tabs.Trigger>
-            <Tabs.Trigger
-              value="today"
-              className={`px-3 py-1.5 rounded-lg transition-all font-semibold flex items-center gap-1.5 ${
-                timeRange === 'today'
-                  ? 'bg-orange-500 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Today&apos;s New IOCs
-            </Tabs.Trigger>
-            <Tabs.Trigger
-              value="24h"
-              className={`px-3 py-1.5 rounded-lg transition-all font-semibold ${
-                timeRange === '24h'
-                  ? 'bg-orange-500 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Last 24 Hours
-            </Tabs.Trigger>
-            <Tabs.Trigger
-              value="7d"
-              className={`px-3 py-1.5 rounded-lg transition-all font-semibold ${
-                timeRange === '7d'
-                  ? 'bg-orange-500 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Last 7 Days
-            </Tabs.Trigger>
-          </Tabs.List>
-        </Tabs.Root>
+        {/* Native Pure-React Time Range Quick Filter Tabs */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white border border-slate-200 shadow-xs font-mono text-xs">
+          <Calendar className="w-4 h-4 text-orange-600 ml-2 mr-1" />
+          <button
+            type="button"
+            onClick={() => setTimeRange('all')}
+            className={`px-3 py-1.5 rounded-lg transition-all font-semibold ${
+              timeRange === 'all'
+                ? 'bg-orange-500 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            All Canonical IOCs
+          </button>
+          <button
+            type="button"
+            onClick={() => setTimeRange('today')}
+            className={`px-3 py-1.5 rounded-lg transition-all font-semibold flex items-center gap-1.5 ${
+              timeRange === 'today'
+                ? 'bg-orange-500 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            Today&apos;s New IOCs
+          </button>
+          <button
+            type="button"
+            onClick={() => setTimeRange('24h')}
+            className={`px-3 py-1.5 rounded-lg transition-all font-semibold ${
+              timeRange === '24h'
+                ? 'bg-orange-500 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Last 24 Hours
+          </button>
+          <button
+            type="button"
+            onClick={() => setTimeRange('7d')}
+            className={`px-3 py-1.5 rounded-lg transition-all font-semibold ${
+              timeRange === '7d'
+                ? 'bg-orange-500 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Last 7 Days
+          </button>
+        </div>
 
         {onRequestIocOpen && (
           <button

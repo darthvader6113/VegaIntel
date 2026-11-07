@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Tabs } from '@ark-ui/react';
 import {
   ReactFlow,
   Background,
@@ -298,44 +297,42 @@ export const ReactFlowDetectionsModule: React.FC<ReactFlowDetectionsModuleProps>
         </div>
 
         <div className="flex items-center gap-3 font-mono text-xs">
-          {/* Ark UI Time Filter ("From the day get new ioc") */}
-          <Tabs.Root
-            value={timeRange}
-            onValueChange={(details) => setTimeRange(details.value as 'today' | '24h' | 'all')}
-          >
-            <Tabs.List className="flex rounded-lg bg-slate-100 border border-slate-200 p-0.5">
-              <Tabs.Trigger
-                value="today"
-                className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold ${
-                  timeRange === 'today'
-                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200 font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Today&apos;s Detections
-              </Tabs.Trigger>
-              <Tabs.Trigger
-                value="24h"
-                className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold ${
-                  timeRange === '24h'
-                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200 font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Last 24 Hours
-              </Tabs.Trigger>
-              <Tabs.Trigger
-                value="all"
-                className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold ${
-                  timeRange === 'all'
-                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200 font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                All Detections
-              </Tabs.Trigger>
-            </Tabs.List>
-          </Tabs.Root>
+          {/* Pure-React Time Filter ("From the day get new ioc") */}
+          <div className="flex rounded-lg bg-slate-100 border border-slate-200 p-0.5">
+            <button
+              type="button"
+              onClick={() => setTimeRange('today')}
+              className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold ${
+                timeRange === 'today'
+                  ? 'bg-white text-orange-600 shadow-sm border border-slate-200 font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Today&apos;s Detections
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimeRange('24h')}
+              className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold ${
+                timeRange === '24h'
+                  ? 'bg-white text-orange-600 shadow-sm border border-slate-200 font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Last 24 Hours
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimeRange('all')}
+              className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold ${
+                timeRange === 'all'
+                  ? 'bg-white text-orange-600 shadow-sm border border-slate-200 font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              All Detections
+            </button>
+          </div>
 
           {/* Fetch IOCs by CVE Trigger Button */}
           <button

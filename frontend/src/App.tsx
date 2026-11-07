@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs } from '@ark-ui/react';
 import { Sidebar, TabType } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { OverviewModule } from './components/modules/OverviewModule';
@@ -14,6 +13,7 @@ import { ExportModule } from './components/modules/ExportModule';
 import { CorrelationGraphModule } from './components/modules/CorrelationGraphModule';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { RequestIocModal } from './components/common/RequestIocModal';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { OverviewStats } from './types';
 import { api } from './services/api';
 
@@ -75,79 +75,79 @@ export function App() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#f8fafc] text-slate-800 font-sans antialiased">
-      {/* Fixed Enterprise Sidebar */}
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        dedupRatio={stats?.metrics.deduplication_ratio_pct ?? 0}
-      />
-
-      {/* Main Content Area powered by Ark UI Tabs */}
-      <Tabs.Root
-        value={activeTab}
-        onValueChange={(details) => setActiveTab(details.value as TabType)}
-        className="flex-1 flex flex-col h-full min-w-0 overflow-hidden"
-      >
-        {/* Top Header */}
-        <Header
+    <ErrorBoundary fallbackTitle="VegaIntel Dashboard Shell">
+      <div className="flex h-screen w-screen overflow-hidden bg-[#f8fafc] text-slate-800 font-sans antialiased">
+        {/* Fixed Enterprise Sidebar */}
+        <Sidebar
           activeTab={activeTab}
-          isSyncing={isSyncing}
-          onTriggerSync={handleTriggerSync}
-          onRequestIocOpen={() => setIsRequestIocOpen(true)}
-          onLogout={handleLogout}
-          currentUser={currentUser}
-          uniqueIocs={stats?.metrics.total_canonical_iocs ?? 0}
+          setActiveTab={setActiveTab}
           dedupRatio={stats?.metrics.deduplication_ratio_pct ?? 0}
         />
 
-        {/* Scrollable Module Canvas (Full Width, Zero Horizontal Overflow) */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-8 min-w-0">
-          <div className="w-full space-y-6">
-            <Tabs.Content value="overview">
-              <OverviewModule stats={stats} onNavigate={setActiveTab} />
-            </Tabs.Content>
-            <Tabs.Content value="detections">
-              <ReactFlowDetectionsModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
-            </Tabs.Content>
-            <Tabs.Content value="cves">
-              <CveExplorerModule />
-            </Tabs.Content>
-            <Tabs.Content value="iocs">
-              <IocRepositoryModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
-            </Tabs.Content>
-            <Tabs.Content value="graph">
-              <CorrelationGraphModule />
-            </Tabs.Content>
-            <Tabs.Content value="apt">
-              <AptGroupsModule />
-            </Tabs.Content>
-            <Tabs.Content value="malware">
-              <MalwareModule />
-            </Tabs.Content>
-            <Tabs.Content value="pocs">
-              <PocLibraryModule />
-            </Tabs.Content>
-            <Tabs.Content value="feeds">
-              <FeedMonitoringModule />
-            </Tabs.Content>
-            <Tabs.Content value="export">
-              <ExportModule />
-            </Tabs.Content>
-          </div>
-        </main>
-      </Tabs.Root>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+          {/* Top Header */}
+          <Header
+            activeTab={activeTab}
+            isSyncing={isSyncing}
+            onTriggerSync={handleTriggerSync}
+            onRequestIocOpen={() => setIsRequestIocOpen(true)}
+            onLogout={handleLogout}
+            currentUser={currentUser}
+            uniqueIocs={stats?.metrics.total_canonical_iocs ?? 0}
+            dedupRatio={stats?.metrics.deduplication_ratio_pct ?? 0}
+          />
 
-      {/* On-Demand IOC Submission & Enrichment Modal */}
-      <RequestIocModal
-        isOpen={isRequestIocOpen}
-        onClose={() => setIsRequestIocOpen(false)}
-        onSuccess={() => {
-          setIsRequestIocOpen(false);
-          fetchStats();
-        }}
-      />
-    </div>
+          {/* Scrollable Module Canvas (Full Width, Zero Horizontal Overflow) */}
+          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-8 min-w-0">
+            <div className="w-full space-y-6">
+              <ErrorBoundary fallbackTitle={`Module: ${activeTab.toUpperCase()}`}>
+                {activeTab === 'overview' && (
+                  <OverviewModule stats={stats} onNavigate={setActiveTab} />
+                )}
+                {activeTab === 'detections' && (
+                  <ReactFlowDetectionsModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
+                )}
+                {activeTab === 'cves' && (
+                  <CveExplorerModule />
+                )}
+                {activeTab === 'iocs' && (
+                  <IocRepositoryModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
+                )}
+                {activeTab === 'graph' && (
+                  <CorrelationGraphModule />
+                )}
+                {activeTab === 'apt' && (
+                  <AptGroupsModule />
+                )}
+                {activeTab === 'malware' && (
+                  <MalwareModule />
+                )}
+                {activeTab === 'pocs' && (
+                  <PocLibraryModule />
+                )}
+                {activeTab === 'feeds' && (
+                  <FeedMonitoringModule />
+                )}
+                {activeTab === 'export' && (
+                  <ExportModule />
+                )}
+              </ErrorBoundary>
+            </div>
+          </main>
+        </div>
+
+        {/* On-Demand IOC Submission & Enrichment Modal */}
+        <RequestIocModal
+          isOpen={isRequestIocOpen}
+          onClose={() => setIsRequestIocOpen(false)}
+          onSuccess={() => {
+            setIsRequestIocOpen(false);
+            fetchStats();
+          }}
+        />
+      </div>
+    </ErrorBoundary>
   );
 }
 

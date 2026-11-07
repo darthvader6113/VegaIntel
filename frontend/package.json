@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ark-ui/react": "^5.40.0",
     "@xyflow/react": "^12.12.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
