@@ -75,8 +75,8 @@ export function App() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#f8fafc] text-slate-800 font-sans">
-      {/* Ark UI Navigation Sidebar */}
+    <div className="flex h-screen w-screen overflow-hidden bg-[#f8fafc] text-slate-800 font-sans antialiased">
+      {/* Fixed Enterprise Sidebar */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -87,7 +87,7 @@ export function App() {
       <Tabs.Root
         value={activeTab}
         onValueChange={(details) => setActiveTab(details.value as TabType)}
-        className="flex-1 flex flex-col h-full overflow-hidden"
+        className="flex-1 flex flex-col h-full min-w-0 overflow-hidden"
       >
         {/* Top Header */}
         <Header
@@ -101,9 +101,9 @@ export function App() {
           dedupRatio={stats?.metrics.deduplication_ratio_pct ?? 0}
         />
 
-        {/* Scrollable Module Canvas using Ark UI Tabs.Content */}
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-7xl mx-auto">
+        {/* Scrollable Module Canvas (Full Width, Zero Horizontal Overflow) */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-8 min-w-0">
+          <div className="w-full space-y-6">
             <Tabs.Content value="overview">
               <OverviewModule stats={stats} onNavigate={setActiveTab} />
             </Tabs.Content>

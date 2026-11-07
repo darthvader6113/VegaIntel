@@ -7,7 +7,12 @@ import {
   Clock,
   Plus,
   SlidersHorizontal,
-  Calendar
+  Calendar,
+  Copy,
+  Check,
+  Shield,
+  Layers,
+  ArrowUpRight
 } from 'lucide-react';
 import { IOC } from '../../types';
 import { api } from '../../services/api';
@@ -24,6 +29,7 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
   const [timeRange, setTimeRange] = useState('all');
   const [minConfidence, setMinConfidence] = useState<number>(0);
   const [selectedDetail, setSelectedDetail] = useState<any | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchIocs = async () => {
@@ -57,32 +63,55 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
     }
   };
 
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(id);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'ip':
+      case 'ipv4':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'domain':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'url':
+        return 'bg-amber-50 text-amber-800 border-amber-200';
+      case 'sha256':
+      case 'md5':
+        return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Ark UI Time Range Quick Filter Tabs ("From the day get new ioc") */}
+    <div className="w-full space-y-6">
+      {/* Time Range Quick Filter Tabs */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <Tabs.Root
           value={timeRange}
           onValueChange={(details) => setTimeRange(details.value)}
           className="flex items-center"
         >
-          <Tabs.List className="flex items-center gap-1.5 p-1 rounded-xl bg-white border border-slate-200 shadow-sm font-mono text-xs">
+          <Tabs.List className="flex items-center gap-1.5 p-1 rounded-xl bg-white border border-slate-200 shadow-xs font-mono text-xs">
             <Calendar className="w-4 h-4 text-orange-600 ml-2 mr-1" />
             <Tabs.Trigger
               value="all"
               className={`px-3 py-1.5 rounded-lg transition-all font-semibold ${
                 timeRange === 'all'
-                  ? 'bg-orange-500 text-white shadow-sm'
+                  ? 'bg-orange-500 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              All Historical IOCs
+              All Canonical IOCs
             </Tabs.Trigger>
             <Tabs.Trigger
               value="today"
               className={`px-3 py-1.5 rounded-lg transition-all font-semibold flex items-center gap-1.5 ${
                 timeRange === 'today'
-                  ? 'bg-orange-500 text-white shadow-sm'
+                  ? 'bg-orange-500 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -93,7 +122,7 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
               value="24h"
               className={`px-3 py-1.5 rounded-lg transition-all font-semibold ${
                 timeRange === '24h'
-                  ? 'bg-orange-500 text-white shadow-sm'
+                  ? 'bg-orange-500 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -103,7 +132,7 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
               value="7d"
               className={`px-3 py-1.5 rounded-lg transition-all font-semibold ${
                 timeRange === '7d'
-                  ? 'bg-orange-500 text-white shadow-sm'
+                  ? 'bg-orange-500 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -114,25 +143,26 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
 
         {onRequestIocOpen && (
           <button
+            type="button"
             onClick={onRequestIocOpen}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold font-mono text-xs shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold font-mono text-xs shadow-xs transition-all active:scale-95"
           >
             <Plus className="w-4 h-4" />
-            <span>Request / Submit IOC</span>
+            <span>On-Demand IOC Query</span>
           </button>
         )}
       </div>
 
       {/* Advanced Search and Filter Bar */}
-      <div className="cyber-card p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+      <div className="p-4 rounded-xl border border-slate-200/90 bg-white shadow-xs flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
         <div className="relative flex-1 min-w-[280px]">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search canonical IOC value, tag, or C2 domain..."
+            placeholder="Search indicator by value, C2 host, IP, or hash..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
           />
         </div>
 
@@ -141,101 +171,123 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+            className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-xs"
           >
-            <option value="">All Types (IP/Domain/URL/Hash)</option>
+            <option value="">All Types (IP / Domain / URL / Hash)</option>
             <option value="domain">Domain</option>
             <option value="ip">IP Address</option>
             <option value="url">URL</option>
-            <option value="sha256">SHA-256</option>
-            <option value="md5">MD5</option>
+            <option value="sha256">SHA-256 Hash</option>
+            <option value="md5">MD5 Hash</option>
           </select>
 
           {/* Source Feed filter */}
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+            className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-xs"
           >
             <option value="">All Threat Feeds</option>
-            <option value="Feodo Tracker">Feodo Tracker</option>
-            <option value="OpenPhish">OpenPhish</option>
-            <option value="Emerging Threats">Emerging Threats</option>
+            <option value="Abuse.ch URLhaus">Abuse.ch URLhaus</option>
+            <option value="ThreatFox">ThreatFox IOCs</option>
             <option value="AlienVault OTX">AlienVault OTX</option>
-            <option value="ThreatFox">ThreatFox</option>
-            <option value="URLhaus">URLhaus</option>
-            <option value="Analyst Submission">Analyst Submission</option>
+            <option value="OpenPhish">OpenPhish Feed</option>
+            <option value="CISA KEV">CISA KEV Indicators</option>
           </select>
 
-          {/* Confidence Slider */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px]">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-orange-600" />
-            <span className="text-slate-600 font-medium">Min Conf:</span>
+          {/* Min Confidence filter */}
+          <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-slate-500 text-[11px]">Min Conf:</span>
             <input
               type="range"
               min="0"
-              max="95"
-              step="5"
+              max="90"
+              step="10"
               value={minConfidence}
               onChange={(e) => setMinConfidence(Number(e.target.value))}
-              className="w-16 accent-orange-500"
+              className="w-16 h-1 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-orange-500"
             />
-            <span className="text-emerald-700 font-bold">{minConfidence}%</span>
+            <span className="font-bold text-slate-800 w-7 text-right">{minConfidence}%</span>
           </div>
+
+          <span className="text-xs text-slate-400 pl-2 border-l border-slate-200">
+            {iocs.length} Indicators
+          </span>
         </div>
       </div>
 
-      {/* IOC Table */}
-      <div className="cyber-card rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-          <div className="flex items-center gap-2">
+      {/* Main Canonical Table / Cards Container */}
+      <div className="rounded-xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-slate-700">
             <Database className="w-4 h-4 text-orange-600" />
-            <h3 className="text-sm font-semibold text-slate-900">
-              Deduplicated Intelligence Repository
-            </h3>
+            <span>Canonical Intelligence Indicator Database</span>
           </div>
-          <span className="text-xs font-mono text-slate-500">
-            {iocs.length} Canonical Records
-          </span>
+          <div className="text-[11px] font-mono text-slate-500">
+            Cross-feed automated deduplication enabled
+          </div>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-xs font-mono text-slate-400">Loading indicators...</div>
+          <div className="p-16 text-center text-xs font-mono text-slate-400 flex flex-col items-center justify-center gap-2">
+            <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            <span>Loading deduplicated indicators...</span>
+          </div>
+        ) : iocs.length === 0 ? (
+          <div className="p-16 text-center text-xs font-mono text-slate-400">
+            No indicators match the specified filters.
+          </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-w-0">
             <table className="w-full text-left text-xs font-mono">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-500 uppercase text-[11px] bg-slate-50">
-                  <th className="py-3 px-4">Type</th>
-                  <th className="py-3 px-4">Canonical Value</th>
-                  <th className="py-3 px-4 text-center">Sightings</th>
-                  <th className="py-3 px-4">Reporting Sources</th>
-                  <th className="py-3 px-4">Tags</th>
-                  <th className="py-3 px-4 text-right">Confidence</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                <tr className="border-b border-slate-200 text-slate-500 uppercase text-[11px] bg-slate-50/80">
+                  <th className="py-3 px-4 font-semibold">Type</th>
+                  <th className="py-3 px-4 font-semibold">Canonical Value</th>
+                  <th className="py-3 px-4 font-semibold text-center">Sightings</th>
+                  <th className="py-3 px-4 font-semibold">Origin Feeds</th>
+                  <th className="py-3 px-4 font-semibold text-right">Confidence</th>
+                  <th className="py-3 px-4 font-semibold text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {iocs.map((ioc) => (
                   <tr
                     key={ioc.fingerprint}
-                    className="hover:bg-slate-50 transition-colors"
+                    className="hover:bg-slate-50/80 transition-colors group"
                   >
                     <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px] uppercase border border-slate-200">
+                      <span className={`px-2 py-0.5 rounded font-bold text-[10px] uppercase border ${getTypeColor(ioc.ioc_type)}`}>
                         {ioc.ioc_type}
                       </span>
                     </td>
 
-                    <td className="py-3 px-4 font-semibold text-slate-900 max-w-xs truncate" title={ioc.ioc_value}>
-                      {ioc.ioc_value}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2 max-w-lg min-w-0">
+                        <span className="font-semibold text-slate-900 truncate select-all" title={ioc.ioc_value}>
+                          {ioc.ioc_value}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(ioc.ioc_value, ioc.fingerprint)}
+                          title="Copy indicator value"
+                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-800 transition-opacity shrink-0"
+                        >
+                          {copiedKey === ioc.fingerprint ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
                     </td>
 
                     <td className="py-3 px-4 text-center">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
                         ioc.sighting_count > 1
-                          ? 'bg-orange-100 text-orange-800 border border-orange-200'
-                          : 'bg-slate-100 text-slate-600'
+                          ? 'bg-orange-50 text-orange-700 border-orange-200'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}>
                         {ioc.sighting_count}x
                       </span>
@@ -246,7 +298,7 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
                         {ioc.sources.map((src) => (
                           <span
                             key={src}
-                            className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 border border-slate-200"
+                            className="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 border border-slate-200 font-medium"
                           >
                             {src}
                           </span>
@@ -254,31 +306,27 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
                       </div>
                     </td>
 
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
-                        {ioc.tags.slice(0, 3).map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 border border-slate-200"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <div className="w-12 bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="bg-emerald-500 h-full rounded-full"
+                            style={{ width: `${ioc.overall_confidence}%` }}
+                          />
+                        </div>
+                        <span className="font-bold text-slate-800 w-8">
+                          {ioc.overall_confidence}%
+                        </span>
                       </div>
                     </td>
 
                     <td className="py-3 px-4 text-right">
-                      <span className="font-bold text-emerald-600">
-                        {ioc.overall_confidence}%
-                      </span>
-                    </td>
-
-                    <td className="py-3 px-4 text-right">
                       <button
+                        type="button"
                         onClick={() => openDetail(ioc.fingerprint)}
-                        className="px-2.5 py-1 rounded bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-700 transition-colors font-semibold text-[11px] border border-slate-200 shadow-sm"
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-700 transition-colors font-semibold text-[11px] border border-slate-200 shadow-2xs"
                       >
-                        Sightings
+                        Inspect
                       </button>
                     </td>
                   </tr>
@@ -291,124 +339,66 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
 
       {/* Sighting History and Deduplication Modal */}
       {selectedDetail && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50">
-              <div>
-                <div className="flex items-center gap-3">
-                  <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-800 font-mono text-xs uppercase font-bold border border-orange-200">
+            <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/80 shrink-0">
+              <div className="min-w-0 pr-4">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span className={`px-2 py-0.5 rounded font-mono text-xs uppercase font-bold border ${getTypeColor(selectedDetail.canonical_ioc.ioc_type)}`}>
                     {selectedDetail.canonical_ioc.ioc_type}
                   </span>
-                  <h3 className="text-lg font-bold font-mono text-slate-900 break-all">
+                  <h3 className="text-lg font-bold font-mono text-slate-900 break-all select-all">
                     {selectedDetail.canonical_ioc.ioc_value}
                   </h3>
                 </div>
                 <div className="text-[11px] font-mono text-slate-500 mt-1 flex items-center gap-3">
-                  <span>Fingerprint: <strong className="text-slate-800">{selectedDetail.canonical_ioc.fingerprint}</strong></span>
+                  <span>Fingerprint: <strong className="text-slate-800 font-normal">{selectedDetail.canonical_ioc.fingerprint}</strong></span>
                   <span>Confidence: <strong className="text-emerald-700">{selectedDetail.canonical_ioc.overall_confidence}%</strong></span>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedDetail(null)}
-                className="p-1 rounded-lg bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                className="p-1.5 rounded-lg bg-slate-200/80 text-slate-600 hover:text-slate-900 transition-colors shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Deduplication Statistics Box */}
-            <div className="p-6 overflow-y-auto space-y-6 text-xs font-mono">
-              <div className="p-4 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-between">
-                <div>
-                  <span className="text-orange-800 font-bold block mb-1">Deduplication Summary</span>
-                  <span className="text-slate-700">
-                    Observed <strong className="text-slate-900">{selectedDetail.deduplication_summary.total_sightings} times</strong> across{' '}
-                    <strong className="text-slate-900">{selectedDetail.canonical_ioc.sources.length} OSINT feeds</strong>.
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-emerald-700 font-extrabold text-base block">
-                    {selectedDetail.deduplication_summary.duplicate_sightings_merged} duplicates saved
-                  </span>
-                  <span className="text-[10px] text-slate-500">Zero duplicated storage</span>
-                </div>
+            {/* Deduplication Statistics Banner */}
+            <div className="p-4 bg-orange-50/60 border-b border-orange-100 flex items-center justify-between text-xs font-mono text-orange-950 shrink-0">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-orange-600" />
+                <span>
+                  <strong>{selectedDetail.sightings.length} Raw Telemetry Sightings</strong> consolidated into this single record
+                </span>
               </div>
+              <span className="font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded border border-orange-200">
+                {selectedDetail.sightings.length > 1 ? `${selectedDetail.sightings.length - 1} Duplicates Prevented` : 'Single Feed Sight'}
+              </span>
+            </div>
 
-              {/* Sighting Observation Log */}
-              <div>
-                <h4 className="font-semibold text-slate-800 uppercase tracking-wider text-[11px] mb-3 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-orange-600" />
-                  Independent Sightings &amp; Raw Evidence ({selectedDetail.sightings.length})
-                </h4>
-                <div className="space-y-3">
-                  {selectedDetail.sightings.map((sighting: any, idx: number) => (
-                    <div
-                      key={sighting.sighting_id || idx}
-                      className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 text-[12px]">{sighting.source}</span>
-                          <span className="text-slate-500 text-[10px]">
-                            {new Date(sighting.observed_at).toLocaleString()}
-                          </span>
-                        </div>
-                        <span className="text-emerald-700 font-bold text-[11px]">
-                          Feed Confidence: {sighting.feed_confidence}%
-                        </span>
-                      </div>
-
-                      {sighting.evidence_notes && (
-                        <p className="text-slate-700 text-[11px]">
-                          {sighting.evidence_notes}
-                        </p>
-                      )}
-
-                      <details className="mt-2 text-[10px]">
-                        <summary className="text-orange-600 hover:text-orange-700 cursor-pointer font-semibold">
-                          View Raw Feed Payload
-                        </summary>
-                        <pre className="mt-1 p-2 rounded bg-slate-900 text-slate-100 overflow-x-auto">
-                          {JSON.stringify(sighting.raw_payload, null, 2)}
-                        </pre>
-                      </details>
+            {/* Sighting Timeline */}
+            <div className="p-6 overflow-y-auto space-y-4 text-xs font-mono flex-1">
+              <h4 className="font-semibold text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-slate-500" />
+                Telemetry Sightings Timeline ({selectedDetail.sightings.length})
+              </h4>
+              <div className="space-y-3">
+                {selectedDetail.sightings.map((s: any, idx: number) => (
+                  <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-slate-900">{s.source}</span>
+                      <span className="text-slate-400">{new Date(s.observed_at).toLocaleString()}</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Correlated Threat Context */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
-                  <span className="font-semibold text-slate-800 text-[11px] block mb-2">
-                    Correlated Vulnerabilities
-                  </span>
-                  {selectedDetail.associated_cves.length === 0 ? (
-                    <span className="text-slate-400 text-[11px]">No mapped CVEs</span>
-                  ) : (
-                    selectedDetail.associated_cves.map((c: any) => (
-                      <div key={c.cve_id} className="text-orange-600 font-bold text-xs">
-                        {c.cve_id} <span className="text-slate-500 text-[10px]">({c.severity} {c.cvss_score})</span>
+                    {s.evidence_notes && (
+                      <div className="text-slate-600 text-[11px] leading-relaxed">
+                        {s.evidence_notes}
                       </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
-                  <span className="font-semibold text-slate-800 text-[11px] block mb-2">
-                    Correlated Malware Families
-                  </span>
-                  {selectedDetail.associated_malware.length === 0 ? (
-                    <span className="text-slate-400 text-[11px]">No mapped malware</span>
-                  ) : (
-                    selectedDetail.associated_malware.map((m: any) => (
-                      <div key={m.malware_id} className="text-amber-700 font-bold text-xs">
-                        {m.name} <span className="text-slate-500 text-[10px]">({m.malware_type})</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>

@@ -6,6 +6,13 @@ import {
   Database,
   Users,
   X,
+  Copy,
+  Check,
+  ShieldAlert,
+  Flame,
+  FileJson,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 import { CVE } from '../../types';
 import { api } from '../../services/api';
@@ -16,6 +23,8 @@ export const CveExplorerModule: React.FC = () => {
   const [selectedSeverity, setSelectedSeverity] = useState<string>('');
   const [onlyPoc, setOnlyPoc] = useState<boolean>(false);
   const [selectedCveDetail, setSelectedCveDetail] = useState<any | null>(null);
+  const [activeModalTab, setActiveModalTab] = useState<'dossier' | 'iocs' | 'pocs' | 'stix'>('dossier');
+  const [copiedText, setCopiedText] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchCves = async () => {
@@ -40,6 +49,7 @@ export const CveExplorerModule: React.FC = () => {
 
   const openDetail = async (cveId: string) => {
     try {
+      setActiveModalTab('dossier');
       const detail = await api.getCVEDetail(cveId);
       setSelectedCveDetail(detail);
     } catch (err) {
@@ -47,18 +57,53 @@ export const CveExplorerModule: React.FC = () => {
     }
   };
 
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(label);
+    setTimeout(() => setCopiedText(null), 2000);
+  };
+
+  const getSeverityBadge = (severity: string, score: number) => {
+    switch (severity) {
+      case 'CRITICAL':
+        return {
+          bg: 'bg-rose-50 text-rose-700 border-rose-200',
+          dot: 'bg-rose-500',
+          borderAccent: 'border-l-rose-500'
+        };
+      case 'HIGH':
+        return {
+          bg: 'bg-orange-50 text-orange-700 border-orange-200',
+          dot: 'bg-orange-500',
+          borderAccent: 'border-l-orange-500'
+        };
+      case 'MEDIUM':
+        return {
+          bg: 'bg-amber-50 text-amber-700 border-amber-200',
+          dot: 'bg-amber-500',
+          borderAccent: 'border-l-amber-500'
+        };
+      default:
+        return {
+          bg: 'bg-sky-50 text-sky-700 border-sky-200',
+          dot: 'bg-sky-500',
+          borderAccent: 'border-l-sky-500'
+        };
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Search and Filters Bar */}
-      <div className="cyber-card p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div className="relative flex-1 min-w-[280px]">
+    <div className="w-full space-y-6">
+      {/* Enterprise Filter & Search Toolbar */}
+      <div className="p-4 rounded-xl border border-slate-200/90 bg-white shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div className="relative flex-1 min-w-[300px]">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search CVEs by ID (e.g. CVE-2021-44228) or keywords (e.g. Log4j, MOVEit)..."
+            placeholder="Search vulnerabilities by CVE ID (e.g. CVE-2024-3400) or software (e.g. VMware, PAN-OS, Log4j)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
           />
         </div>
 
@@ -67,201 +112,449 @@ export const CveExplorerModule: React.FC = () => {
           <select
             value={selectedSeverity}
             onChange={(e) => setSelectedSeverity(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+            className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-xs"
           >
             <option value="">All Severities</option>
-            <option value="CRITICAL">Critical Only</option>
-            <option value="HIGH">High Only</option>
-            <option value="MEDIUM">Medium Only</option>
+            <option value="CRITICAL">Critical Severity (9.0+)</option>
+            <option value="HIGH">High Severity (7.0 - 8.9)</option>
+            <option value="MEDIUM">Medium Severity (4.0 - 6.9)</option>
           </select>
 
-          {/* PoC toggle button */}
+          {/* Weaponized PoC toggle button */}
           <button
+            type="button"
             onClick={() => setOnlyPoc(!onlyPoc)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono transition-all border ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono transition-all border shadow-xs ${
               onlyPoc
-                ? 'bg-orange-50 text-orange-700 border-orange-300 shadow-sm font-semibold'
-                : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-slate-900'
+                ? 'bg-orange-50 text-orange-700 border-orange-300 font-semibold'
+                : 'bg-white text-slate-600 border-slate-200 hover:text-slate-900 hover:bg-slate-50'
             }`}
           >
             <Code2 className="w-3.5 h-3.5 text-orange-600" />
             <span>Weaponized PoC</span>
           </button>
+
+          <span className="text-xs font-mono text-slate-400 pl-1 border-l border-slate-200">
+            {cves.length} CVEs
+          </span>
         </div>
       </div>
 
-      {/* CVE Grid / List */}
+      {/* CVE Full Width Card Grid */}
       {loading ? (
-        <div className="p-12 text-center text-xs font-mono text-slate-400">Loading vulnerabilities...</div>
+        <div className="p-16 text-center text-xs font-mono text-slate-400 flex flex-col items-center justify-center gap-2">
+          <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <span>Ingesting &amp; correlating vulnerabilities...</span>
+        </div>
+      ) : cves.length === 0 ? (
+        <div className="p-16 text-center text-xs font-mono text-slate-400 bg-white rounded-xl border border-slate-200">
+          No vulnerabilities match the current filter criteria.
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {cves.map((cve) => (
-            <div
-              key={cve.cve_id}
-              onClick={() => openDetail(cve.cve_id)}
-              className="cyber-card p-5 rounded-xl border border-slate-200 bg-white hover:border-orange-300 shadow-sm cursor-pointer transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="font-mono text-sm font-bold text-slate-900 tracking-wide">
-                    {cve.cve_id}
-                  </span>
-                  
-                  {/* Severity badge */}
-                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
-                    cve.severity === 'CRITICAL'
-                      ? 'bg-red-50 text-red-700 border-red-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200'
-                  }`}>
-                    {cve.severity} {cve.cvss_score.toFixed(1)}
-                  </span>
-
-                  {cve.has_poc && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 flex items-center gap-1 font-semibold">
-                      <Code2 className="w-3 h-3 text-orange-600" />
-                      Exploit Available
+        <div className="grid grid-cols-1 gap-3.5">
+          {cves.map((cve) => {
+            const badge = getSeverityBadge(cve.severity, cve.cvss_score);
+            return (
+              <div
+                key={cve.cve_id}
+                onClick={() => openDetail(cve.cve_id)}
+                className={`p-5 rounded-xl border border-slate-200/90 bg-white hover:border-orange-300/80 hover:shadow-md cursor-pointer transition-all border-l-4 ${badge.borderAccent} flex flex-col justify-between gap-3 group`}
+              >
+                {/* Header row: ID, Badges, Dates */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="font-mono text-sm font-bold text-slate-900 group-hover:text-orange-600 transition-colors">
+                      {cve.cve_id}
                     </span>
-                  )}
 
-                  {cve.cwe_ids.map((cwe) => (
-                    <span key={cwe} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                      {cwe}
+                    {/* Severity Pill */}
+                    <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badge.bg}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                      {cve.severity} {cve.cvss_score.toFixed(1)}
                     </span>
-                  ))}
-                </div>
 
-                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                  {cve.description}
-                </p>
-              </div>
+                    {/* CISA KEV Badge */}
+                    {cve.severity === 'CRITICAL' && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1 font-semibold">
+                        <Flame className="w-3 h-3 text-rose-600" />
+                        CISA KEV EXPLOITED
+                      </span>
+                    )}
 
-              <div className="flex items-center gap-6 shrink-0 font-mono text-xs">
-                <div className="text-right">
-                  <div className="text-slate-500 text-[10px] uppercase font-semibold">Correlated IOCs</div>
-                  <div className="text-orange-600 font-bold text-base flex items-center justify-end gap-1">
-                    <Database className="w-3.5 h-3.5" />
-                    {cve.associated_ioc_count}
+                    {/* PoC Badge */}
+                    {cve.has_poc && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1 font-semibold">
+                        <Code2 className="w-3 h-3 text-amber-600" />
+                        Weaponized PoC
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(cve.cve_id, cve.cve_id);
+                      }}
+                      title="Copy CVE ID"
+                      className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                    >
+                      {copiedText === cve.cve_id ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                    <span className="text-xs font-mono text-slate-500 group-hover:text-orange-600 font-semibold flex items-center gap-1 transition-colors">
+                      Dossier <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
                   </div>
                 </div>
 
-                <button className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-700 text-xs font-semibold border border-slate-200 shadow-sm transition-colors">
-                  Inspect
-                </button>
+                {/* Vulnerability Description (2-line clamp) */}
+                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                  {cve.description}
+                </p>
+
+                {/* Bottom Metadata Badges */}
+                <div className="flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-500 pt-2 border-t border-slate-100 gap-2">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    {cve.associated_ioc_count > 0 && (
+                      <span className="flex items-center gap-1 text-slate-700 font-medium">
+                        <Database className="w-3.5 h-3.5 text-orange-600" />
+                        {cve.associated_ioc_count} Correlated Canonical IOCs
+                      </span>
+                    )}
+                    {cve.cwe_ids && cve.cwe_ids.length > 0 && (
+                      <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px]">
+                        {cve.cwe_ids.join(', ')}
+                      </span>
+                    )}
+                  </div>
+
+                  {cve.published_date && (
+                    <span className="text-[10px] text-slate-400">
+                      Disclosed: {new Date(cve.published_date).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* CVE Detailed Modal */}
+      {/* Enterprise CVE Detailed Dossier Modal */}
       {selectedCveDetail && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl">
-            {/* Header */}
-            <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h3 className="text-xl font-bold font-mono text-slate-900">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/80 shrink-0">
+              <div className="space-y-1.5 min-w-0 pr-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h3 className="text-xl font-bold font-mono text-slate-900 tracking-tight">
                     {selectedCveDetail.cve.cve_id}
                   </h3>
-                  <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
-                    CVSS {selectedCveDetail.cve.cvss_score} ({selectedCveDetail.cve.severity})
+                  <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border ${getSeverityBadge(selectedCveDetail.cve.severity, selectedCveDetail.cve.cvss_score).bg}`}>
+                    CVSS {selectedCveDetail.cve.cvss_score.toFixed(1)} ({selectedCveDetail.cve.severity})
                   </span>
+                  {selectedCveDetail.cve.severity === 'CRITICAL' && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200 font-bold flex items-center gap-1">
+                      <Flame className="w-3 h-3 text-rose-600" />
+                      CISA KEV ACTIVE
+                    </span>
+                  )}
                 </div>
                 {selectedCveDetail.cve.cvss_vector && (
-                  <div className="text-[11px] font-mono text-slate-500 mt-1">
-                    Vector: {selectedCveDetail.cve.cvss_vector}
+                  <div className="text-[11px] font-mono text-slate-500 truncate">
+                    Vector: <span className="text-slate-800 font-semibold">{selectedCveDetail.cve.cvss_vector}</span>
                   </div>
                 )}
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedCveDetail(null)}
-                className="p-1 rounded-lg bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                className="p-1.5 rounded-lg bg-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-300 transition-colors shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Content Body */}
-            <div className="p-6 overflow-y-auto space-y-6 text-xs">
-              <div>
-                <h4 className="font-semibold text-slate-800 uppercase tracking-wider font-mono text-[11px] mb-2">
-                  Vulnerability Description
-                </h4>
-                <p className="text-slate-700 leading-relaxed bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                  {selectedCveDetail.cve.description}
-                </p>
+            {/* Quick KPI Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-slate-200 bg-white p-3 shrink-0 text-center text-xs font-mono divide-x divide-slate-100">
+              <div className="p-1.5">
+                <div className="text-[10px] text-slate-400 uppercase">CVSS Score</div>
+                <div className="text-base font-bold text-slate-900 mt-0.5">
+                  {selectedCveDetail.cve.cvss_score.toFixed(1)} <span className="text-xs text-slate-400 font-normal">/ 10</span>
+                </div>
               </div>
+              <div className="p-1.5">
+                <div className="text-[10px] text-slate-400 uppercase">Exploit PoCs</div>
+                <div className="text-base font-bold text-amber-600 mt-0.5">
+                  {selectedCveDetail.pocs.length}
+                </div>
+              </div>
+              <div className="p-1.5">
+                <div className="text-[10px] text-slate-400 uppercase">Threat Actors</div>
+                <div className="text-base font-bold text-purple-600 mt-0.5">
+                  {selectedCveDetail.exploiting_actors.length}
+                </div>
+              </div>
+              <div className="p-1.5">
+                <div className="text-[10px] text-slate-400 uppercase">Canonical IOCs</div>
+                <div className="text-base font-bold text-orange-600 mt-0.5">
+                  {selectedCveDetail.associated_iocs.length}
+                </div>
+              </div>
+            </div>
 
-              {/* Mapped Threat Actors */}
-              {selectedCveDetail.exploiting_actors.length > 0 && (
-                <div>
-                  <h4 className="font-semibold text-slate-800 uppercase tracking-wider font-mono text-[11px] mb-2 flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-orange-600" />
-                    Threat Actors Actively Exploiting
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCveDetail.exploiting_actors.map((actor: string) => (
-                      <span key={actor} className="px-2.5 py-1 rounded bg-orange-50 text-orange-700 border border-orange-200 font-mono font-semibold">
-                        {actor}
-                      </span>
-                    ))}
+            {/* Navigation Tabs inside modal */}
+            <div className="flex border-b border-slate-200 px-6 gap-6 bg-slate-50/50 shrink-0 text-xs font-mono">
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('dossier')}
+                className={`py-3 border-b-2 font-semibold transition-colors flex items-center gap-1.5 ${
+                  activeModalTab === 'dossier'
+                    ? 'border-orange-500 text-orange-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>Vulnerability Dossier</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('iocs')}
+                className={`py-3 border-b-2 font-semibold transition-colors flex items-center gap-1.5 ${
+                  activeModalTab === 'iocs'
+                    ? 'border-orange-500 text-orange-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>Correlated IOCs ({selectedCveDetail.associated_iocs.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('pocs')}
+                className={`py-3 border-b-2 font-semibold transition-colors flex items-center gap-1.5 ${
+                  activeModalTab === 'pocs'
+                    ? 'border-orange-500 text-orange-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Code2 className="w-3.5 h-3.5" />
+                <span>PoCs &amp; Exploits ({selectedCveDetail.pocs.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('stix')}
+                className={`py-3 border-b-2 font-semibold transition-colors flex items-center gap-1.5 ${
+                  activeModalTab === 'stix'
+                    ? 'border-orange-500 text-orange-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <FileJson className="w-3.5 h-3.5" />
+                <span>STIX 2.1 JSON</span>
+              </button>
+            </div>
+
+            {/* Modal Body Content (Scrollable, Zero Overflow) */}
+            <div className="p-6 overflow-y-auto space-y-6 text-xs flex-1">
+              {activeModalTab === 'dossier' && (
+                <div className="space-y-6">
+                  {/* Vulnerability Summary */}
+                  <div>
+                    <h4 className="font-semibold text-slate-900 uppercase tracking-wider font-mono text-[11px] mb-2">
+                      Vulnerability Description &amp; Technical Analysis
+                    </h4>
+                    <p className="text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200 font-sans text-xs">
+                      {selectedCveDetail.cve.description}
+                    </p>
                   </div>
+
+                  {/* Threat Actors */}
+                  {selectedCveDetail.exploiting_actors.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-slate-900 uppercase tracking-wider font-mono text-[11px] mb-2 flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-purple-600" />
+                        Threat Actors Actively Exploiting ({selectedCveDetail.exploiting_actors.length})
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedCveDetail.exploiting_actors.map((actor: string) => (
+                          <span key={actor} className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 border border-purple-200 font-mono font-bold flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-purple-600" />
+                            {actor}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* References & Advisories */}
+                  {selectedCveDetail.cve.references && selectedCveDetail.cve.references.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-slate-900 uppercase tracking-wider font-mono text-[11px] mb-2 flex items-center gap-1.5">
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                        Official References &amp; Vendor Advisories
+                      </h4>
+                      <div className="space-y-1.5 font-mono">
+                        {selectedCveDetail.cve.references.map((ref: string, idx: number) => (
+                          <a
+                            key={idx}
+                            href={ref}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-2.5 rounded-lg bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-200 text-slate-700 hover:text-orange-700 flex items-center justify-between text-xs transition-colors"
+                          >
+                            <span className="truncate mr-4">{ref}</span>
+                            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Associated Canonical IOCs */}
-              <div>
-                <h4 className="font-semibold text-slate-800 uppercase tracking-wider font-mono text-[11px] mb-2 flex items-center gap-1.5">
-                  <Database className="w-3.5 h-3.5 text-orange-600" />
-                  Correlated Canonical IOCs ({selectedCveDetail.associated_iocs.length})
-                </h4>
-                {selectedCveDetail.associated_iocs.length === 0 ? (
-                  <div className="text-slate-400 font-mono italic">No IOCs mapped yet.</div>
-                ) : (
-                  <div className="space-y-2 font-mono">
-                    {selectedCveDetail.associated_iocs.map((ioc: any) => (
-                      <div key={ioc.fingerprint} className="p-2.5 rounded bg-slate-50 border border-slate-200 flex items-center justify-between">
-                        <div>
-                          <span className="text-orange-600 font-semibold mr-2">[{ioc.ioc_type.toUpperCase()}]</span>
-                          <span className="text-slate-900 font-medium">{ioc.ioc_value}</span>
-                          <span className="text-slate-500 ml-2 text-[10px]">({ioc.sources.join(', ')})</span>
-                        </div>
-                        <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-[10px]">
-                          {ioc.sighting_count} sightings
-                        </span>
+              {activeModalTab === 'iocs' && (
+                <div>
+                  {selectedCveDetail.associated_iocs.length === 0 ? (
+                    <div className="p-8 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-2">
+                      <Database className="w-8 h-8 text-slate-300 mx-auto" />
+                      <div className="text-xs font-mono font-semibold text-slate-700">
+                        Zero Canonical IOCs In Observed Window
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* PoC Exploit References */}
-              <div>
-                <h4 className="font-semibold text-slate-800 uppercase tracking-wider font-mono text-[11px] mb-2 flex items-center gap-1.5">
-                  <Code2 className="w-3.5 h-3.5 text-amber-600" />
-                  PoC &amp; Exploit References ({selectedCveDetail.pocs.length})
-                </h4>
-                <div className="space-y-2">
-                  {selectedCveDetail.pocs.map((poc: any) => (
-                    <div key={poc.poc_id} className="p-3 rounded bg-slate-50 border border-slate-200 flex items-start justify-between gap-4 font-mono">
-                      <div>
-                        <div className="font-semibold text-slate-900">{poc.title}</div>
-                        <div className="text-[11px] text-slate-600 mt-1">{poc.description}</div>
-                        <div className="text-[10px] text-slate-500 mt-1">Source: {poc.source} · Author: {poc.author}</div>
+                      <div className="text-[11px] text-slate-500 max-w-md mx-auto">
+                        Automated background telemetry continues ingesting from Abuse.ch, ThreatFox, and CISA KEV to map newly emerging C2 domains, hashes, and scanning IPs.
                       </div>
-                      <a
-                        href={poc.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-2.5 py-1 rounded bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-500 hover:text-white flex items-center gap-1 shrink-0 font-bold transition-colors"
-                      >
-                        Source <ExternalLink className="w-3 h-3" />
-                      </a>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="space-y-2 font-mono">
+                      {selectedCveDetail.associated_iocs.map((ioc: any) => (
+                        <div key={ioc.fingerprint} className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-100 text-orange-800 border border-orange-200 shrink-0">
+                              {ioc.ioc_type.toUpperCase()}
+                            </span>
+                            <span className="text-slate-900 font-semibold truncate select-all">{ioc.ioc_value}</span>
+                            <span className="text-slate-400 text-[10px] hidden sm:inline">
+                              ({ioc.sources.join(', ')})
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-[10px]">
+                              {ioc.sighting_count} sightings
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(ioc.ioc_value, ioc.fingerprint)}
+                              className="p-1 text-slate-400 hover:text-slate-800"
+                              title="Copy indicator"
+                            >
+                              {copiedText === ioc.fingerprint ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
+
+              {activeModalTab === 'pocs' && (
+                <div>
+                  {selectedCveDetail.pocs.length === 0 ? (
+                    <div className="p-8 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-2">
+                      <Code2 className="w-8 h-8 text-slate-300 mx-auto" />
+                      <div className="text-xs font-mono font-semibold text-slate-700">
+                        No Public Exploit Scripts Cataloged
+                      </div>
+                      <div className="text-[11px] text-slate-500 max-w-md mx-auto">
+                        No weaponized PoC code has been verified on GitHub, Exploit-DB, or PacketStorm for this vulnerability record.
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 font-mono">
+                      {selectedCveDetail.pocs.map((poc: any) => (
+                        <div key={poc.poc_id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="min-w-0 space-y-1">
+                            <div className="font-bold text-slate-900 text-xs truncate">{poc.title}</div>
+                            <div className="text-[11px] text-slate-600">{poc.description}</div>
+                            <div className="text-[10px] text-slate-400">
+                              Source: <span className="text-slate-700 font-semibold">{poc.source}</span> · Author: <span className="text-slate-700 font-semibold">{poc.author}</span>
+                            </div>
+                          </div>
+                          <a
+                            href={poc.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 transition-colors shadow-xs"
+                          >
+                            <span>Inspect Exploit</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeModalTab === 'stix' && (
+                <div className="space-y-3 font-mono">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 text-[11px]">OASIS STIX 2.1 Vulnerability Object:</span>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(JSON.stringify(selectedCveDetail, null, 2), 'stix-json')}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                    >
+                      {copiedText === 'stix-json' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy STIX 2.1</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <pre className="p-4 rounded-xl bg-slate-900 text-slate-100 text-[11px] overflow-x-auto leading-relaxed border border-slate-800">
+                    {JSON.stringify(
+                      {
+                        type: "vulnerability",
+                        spec_version: "2.1",
+                        id: `vulnerability--${selectedCveDetail.cve.cve_id.toLowerCase()}`,
+                        name: selectedCveDetail.cve.cve_id,
+                        description: selectedCveDetail.cve.description,
+                        external_references: [
+                          {
+                            source_name: "cve",
+                            external_id: selectedCveDetail.cve.cve_id
+                          }
+                        ],
+                        x_cvss_score: selectedCveDetail.cve.cvss_score,
+                        x_cvss_vector: selectedCveDetail.cve.cvss_vector,
+                        x_exploiting_actors: selectedCveDetail.exploiting_actors,
+                        x_correlated_iocs_count: selectedCveDetail.associated_iocs.length,
+                        x_poc_count: selectedCveDetail.pocs.length
+                      },
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
+              )}
             </div>
           </div>
         </div>
