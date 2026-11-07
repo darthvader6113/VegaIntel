@@ -73,10 +73,11 @@ class DatabaseManager:
             return
             
         try:
-            # Canonical IOCs collection: unique compound index on fingerprint
+            # Canonical IOCs collection: unique index on fingerprint
             self.db.iocs.create_index([("fingerprint", pymongo.ASCENDING)], unique=True)
             self.db.iocs.create_index([("ioc_type", pymongo.ASCENDING)])
             self.db.iocs.create_index([("ioc_value", pymongo.ASCENDING)])
+            self.db.iocs.create_index([("associated_cves", pymongo.ASCENDING)])
             self.db.iocs.create_index([("overall_confidence", pymongo.DESCENDING)])
             self.db.iocs.create_index([("sighting_count", pymongo.DESCENDING)])
             self.db.iocs.create_index([("last_seen", pymongo.DESCENDING)])
@@ -87,10 +88,11 @@ class DatabaseManager:
             self.db.sightings.create_index([("observed_at", pymongo.DESCENDING)])
             self.db.sightings.create_index([("associated_cve", pymongo.ASCENDING)])
 
-            # Relationships collection: compound index on source & target
-            self.db.relationships.create_index([("source_id", pymongo.ASCENDING), ("target_id", pymongo.ASCENDING)], unique=True)
+            # Relationships collection: compound index on source, target, and relationship_type
+            self.db.relationships.create_index([("source_id", pymongo.ASCENDING), ("target_id", pymongo.ASCENDING), ("relationship_type", pymongo.ASCENDING)], unique=True)
             self.db.relationships.create_index([("source_type", pymongo.ASCENDING)])
             self.db.relationships.create_index([("target_type", pymongo.ASCENDING)])
+            self.db.relationships.create_index([("relationship_type", pymongo.ASCENDING)])
             self.db.relationships.create_index([("relation_type", pymongo.ASCENDING)])
 
             # CVEs collection: unique index on cve_id

@@ -16,7 +16,7 @@ def get_overview_stats(db=Depends(get_db)):
     total_cves = db.cves.count_documents({})
     total_apt = db.apt_groups.count_documents({})
     total_malware = db.malware.count_documents({})
-    total_pocs = db.poc_references.count_documents({})
+    total_pocs = max(db.poc_references.count_documents({}), db.pocs.count_documents({}))
 
     duplicates_prevented = max(0, total_sightings - total_iocs)
     dedup_ratio = round((duplicates_prevented / total_sightings * 100), 1) if total_sightings > 0 else 0.0

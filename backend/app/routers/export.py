@@ -3,7 +3,7 @@ Export & API Router.
 Provides intelligence exports in STIX 2.1 JSON, raw JSON, and CSV formats.
 """
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 import io
 from typing import Optional
 import uuid
@@ -22,7 +22,7 @@ def export_stix_bundle(
     """
     Exports platform intelligence as an OASIS STIX 2.1 compliant bundle.
     """
-    now_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
     stix_objects = []
 
     # 1. Export IOCs as STIX Indicators
@@ -152,7 +152,7 @@ def export_csv(db=Depends(get_db)):
 def export_json(db=Depends(get_db)):
     iocs = list(db.iocs.find({}, {"_id": 0}))
     return {
-        "export_timestamp": datetime.utcnow().isoformat(),
+        "export_timestamp": datetime.now(timezone.utc).isoformat(),
         "total_canonical_records": len(iocs),
         "iocs": iocs
     }

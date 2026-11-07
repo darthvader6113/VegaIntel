@@ -3,7 +3,7 @@ Base Collector Interface for OSINT intelligence feeds.
 Handles job execution tracking, rate limiting, error catching, and metrics.
 """
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from typing import Any, Dict, List, Optional
 import uuid
@@ -31,7 +31,7 @@ class BaseCollector(ABC):
         job_doc = {
             "job_id": job_id,
             "source": self.feed_name,
-            "started_at": datetime.utcnow(),
+            "started_at": datetime.now(timezone.utc),
             "completed_at": None,
             "status": "RUNNING",
             "records_processed": 0,
@@ -59,7 +59,7 @@ class BaseCollector(ABC):
         """Updates job and feed status in MongoDB."""
         status = "FAILED" if error else "SUCCESS"
         duplicates_prevented = max(0, sightings - new_iocs)
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         self.db.ingestion_jobs.update_one(
             {"job_id": job_id},

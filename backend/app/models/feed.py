@@ -1,7 +1,7 @@
 """
 Pydantic models for OSINT Feed health and ingestion jobs.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import uuid
 from pydantic import BaseModel, Field
@@ -23,7 +23,7 @@ class FeedStatusModel(BaseModel):
 class IngestionJobModel(BaseModel):
     job_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     source: str
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
     status: str = Field(default="RUNNING", description="RUNNING, SUCCESS, FAILED")
     records_processed: int = 0
@@ -31,4 +31,3 @@ class IngestionJobModel(BaseModel):
     sightings_added: int = 0
     duplicates_prevented: int = 0
     error_message: Optional[str] = None
-

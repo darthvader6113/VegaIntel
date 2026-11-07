@@ -1,7 +1,7 @@
 """
 Pydantic models for CVE intelligence.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
@@ -24,8 +24,8 @@ class CVEModel(BaseModel):
     references: List[str] = []
     has_poc: bool = False
     associated_ioc_count: int = 0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class CVESummary(BaseModel):
@@ -36,4 +36,3 @@ class CVESummary(BaseModel):
     associated_ioc_count: int = 0
     has_poc: bool = False
     published_date: Optional[datetime] = None
-

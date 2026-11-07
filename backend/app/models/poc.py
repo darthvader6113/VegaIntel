@@ -2,7 +2,7 @@
 Pydantic models for PoC and Exploit references.
 PoCs are handled strictly as reference metadata and never executed.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import uuid
 from pydantic import BaseModel, Field
@@ -19,5 +19,4 @@ class PoCModel(BaseModel):
     description: str = ""
     discovered_date: Optional[datetime] = None
     advisory: str = "TREAT AS REFERENCE ONLY. Do not execute downloaded exploit code."
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

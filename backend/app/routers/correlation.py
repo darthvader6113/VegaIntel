@@ -40,11 +40,13 @@ def get_correlation_graph(
     relationships = list(db.relationships.find(rel_query, {"_id": 0}).limit(limit))
 
     for rel in relationships:
-        s_id = rel["source_id"]
-        t_id = rel["target_id"]
-        s_type = rel["source_type"]
-        t_type = rel["target_type"]
-        r_type = rel["relation_type"]
+        s_id = rel.get("source_id")
+        t_id = rel.get("target_id")
+        if not s_id or not t_id:
+            continue
+        s_type = rel.get("source_type", "entity")
+        t_type = rel.get("target_type", "entity")
+        r_type = rel.get("relationship_type") or rel.get("relation_type") or "related_to"
 
         # Register source node
         add_node(s_id, s_id, s_type, {"type": s_type})
