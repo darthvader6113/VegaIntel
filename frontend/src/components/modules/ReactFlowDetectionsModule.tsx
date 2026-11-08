@@ -428,14 +428,6 @@ export const ReactFlowDetectionsModule: React.FC<ReactFlowDetectionsModuleProps>
       {/* Main Flow Canvas and Node Details */}
       <div className="flex-1 flex gap-4 min-h-0">
         <div className="flex-1 rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden relative">
-          {/* Lane Header Overlay */}
-          <div className="absolute top-2 left-4 right-4 z-10 flex justify-between text-[11px] font-mono text-slate-400 uppercase pointer-events-none px-4">
-            <span className="w-64 text-purple-700 font-bold">1. Threat Actors</span>
-            <span className="w-64 text-amber-700 font-bold">2. Payloads &amp; Tools</span>
-            <span className="w-64 text-red-700 font-bold">3. CVE Vulnerabilities</span>
-            <span className="w-96 text-orange-700 font-bold">4. Correlated IOCs</span>
-          </div>
-
           <ReactFlow
             nodes={nodes}
             edges={edges}

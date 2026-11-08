@@ -39,12 +39,12 @@ def list_cves(
 
 
 @router.get("/{cve_id}")
-def get_cve_detail(cve_id: str, db=Depends(get_db)):
+async def get_cve_detail(cve_id: str, db=Depends(get_db)):
     cve = db.cves.find_one({"cve_id": cve_id}, {"_id": 0})
     if not cve:
         raise HTTPException(status_code=404, detail=f"CVE '{cve_id}' not found.")
 
-    # Fetch associated IOC relationships
+    # 1. Fetch direct associated IOC relationships
     ioc_relations = list(db.relationships.find({
         "target_id": cve_id,
         "$or": [
@@ -53,7 +53,6 @@ def get_cve_detail(cve_id: str, db=Depends(get_db)):
         ]
     }, {"_id": 0}))
 
-    # Get details of associated IOCs from both direct tagging and graph relationships
     associated_fingerprints = [r["source_id"] for r in ioc_relations]
     iocs = list(db.iocs.find({
         "$or": [
@@ -62,24 +61,73 @@ def get_cve_detail(cve_id: str, db=Depends(get_db)):
         ]
     }, {"_id": 0}))
 
-    # If no IOCs yet, auto-query live threat databases for genuine indicators
+    # 2. If no direct IOCs yet, trigger and await authoritative live OSINT collection
     if not iocs:
-        import asyncio
         from app.core.cve_fetcher import CVEIntelligenceFetcher
         fetcher = CVEIntelligenceFetcher(db)
         try:
-            # Run async fetch in current event loop or new loop safely
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # Scheduled task or existing loop
-                asyncio.create_task(fetcher.fetch_and_store_cve_iocs(cve_id))
-            else:
-                loop.run_until_complete(fetcher.fetch_and_store_cve_iocs(cve_id))
+            await fetcher.fetch_and_store_cve_iocs(cve_id)
         except Exception:
             pass
-        iocs = list(db.iocs.find({"associated_cves": cve_id}, {"_id": 0}))
 
-    # Fetch PoCs from both poc_references and pocs collections
+        # Re-fetch direct IOCs after live query
+        ioc_relations = list(db.relationships.find({
+            "target_id": cve_id,
+            "$or": [
+                {"relationship_type": {"$in": ["associated_with", "indicates", "targets"]}},
+                {"relation_type": {"$in": ["associated_with", "indicates", "targets"]}}
+            ]
+        }, {"_id": 0}))
+        associated_fingerprints = [r["source_id"] for r in ioc_relations]
+        iocs = list(db.iocs.find({
+            "$or": [
+                {"fingerprint": {"$in": associated_fingerprints}},
+                {"associated_cves": cve_id}
+            ]
+        }, {"_id": 0}))
+
+    # 3. Correlate with attributed Threat Actors and delivering Malware families
+    actor_relations = list(db.relationships.find({
+        "target_id": cve_id,
+        "$or": [
+            {"relationship_type": {"$in": ["exploits", "exploits_cve"]}},
+            {"relation_type": {"$in": ["exploits", "exploits_cve"]}}
+        ]
+    }, {"_id": 0}))
+    actors = [r["source_id"] for r in actor_relations]
+    direct_actors = [g["name"] for g in db.apt_groups.find({"associated_cves": cve_id}, {"name": 1, "_id": 0})]
+    all_actors = list(set(actors + direct_actors))
+
+    malware_relations = list(db.relationships.find({
+        "target_id": cve_id,
+        "$or": [
+            {"relationship_type": {"$in": ["delivers", "drops", "weaponizes"]}},
+            {"relation_type": {"$in": ["delivers", "drops", "weaponizes"]}}
+        ]
+    }, {"_id": 0}))
+    all_malware = list(set([r["source_id"] for r in malware_relations]))
+
+    # If direct IOCs are sparse (< 4), also include verified indicators from linked threat actors & malware
+    if len(iocs) < 4 and (all_actors or all_malware):
+        linked_entities = all_actors + all_malware
+        extra_relations = list(db.relationships.find({
+            "target_id": {"$in": linked_entities},
+            "source_type": "ioc"
+        }, {"source_id": 1, "_id": 0}))
+        extra_fps = [r["source_id"] for r in extra_relations]
+        if extra_fps:
+            extra_iocs = list(db.iocs.find({"fingerprint": {"$in": extra_fps}}, {"_id": 0}))
+            existing_fps = {i["fingerprint"] for i in iocs}
+            for extra in extra_iocs:
+                if extra["fingerprint"] not in existing_fps:
+                    iocs.append(extra)
+
+    # Update associated count in DB for consistency
+    if len(iocs) > 0:
+        db.cves.update_one({"cve_id": cve_id}, {"$set": {"associated_ioc_count": len(iocs)}})
+        cve["associated_ioc_count"] = len(iocs)
+
+    # 4. Fetch PoCs from both poc_references and pocs collections
     pocs = list(db.poc_references.find({"cve_id": cve_id}, {"_id": 0}))
     if not pocs:
         pocs = list(db.pocs.find({"cve_id": cve_id}, {"_id": 0}))
@@ -95,22 +143,11 @@ def get_cve_detail(cve_id: str, db=Depends(get_db)):
             "description": f"Verified public vulnerability disclosure and proof-of-concept reference for {cve_id}."
         }]
 
-    # Fetch Threat Actors exploiting this CVE
-    actor_relations = list(db.relationships.find({
-        "target_id": cve_id,
-        "$or": [
-            {"relationship_type": {"$in": ["exploits", "exploits_cve"]}},
-            {"relation_type": {"$in": ["exploits", "exploits_cve"]}}
-        ]
-    }, {"_id": 0}))
-    actors = [r["source_id"] for r in actor_relations]
-    direct_actors = [g["name"] for g in db.apt_groups.find({"associated_cves": cve_id}, {"name": 1, "_id": 0})]
-    all_actors = list(set(actors + direct_actors))
-
     return {
         "cve": cve,
         "associated_iocs": iocs,
         "pocs": pocs,
-        "exploiting_actors": all_actors
+        "exploiting_actors": all_actors,
+        "delivering_malware": all_malware
     }
 

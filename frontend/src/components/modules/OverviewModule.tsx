@@ -55,25 +55,35 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
   const minVal = Math.min(...trendData.map(d => d.iocs)) * 0.9;
   const range = maxVal - minVal || 1;
 
-  // SVG coordinate calculations for 500x120 viewBox
-  const width = 540;
-  const height = 120;
-  const paddingX = 30;
-  const paddingY = 16;
+  // SVG coordinate calculations for 600x150 viewBox
+  const width = 600;
+  const height = 150;
+  const paddingX = 40;
+  const paddingTop = 20;
+  const paddingBottom = 30;
   const usableW = width - paddingX * 2;
-  const usableH = height - paddingY * 2;
+  const usableH = height - paddingTop - paddingBottom;
+  const baselineY = height - paddingBottom;
 
   const points = trendData.map((d, i) => {
     const x = paddingX + (i / (trendData.length - 1)) * usableW;
-    const y = height - paddingY - ((d.iocs - minVal) / range) * usableH;
+    const y = paddingTop + (1 - (d.iocs - minVal) / range) * usableH;
     return { x, y, ...d };
   });
 
-  const pathD = points.reduce((acc, p, i) => {
-    return i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
-  }, '');
+  // Smooth cubic Bezier spline
+  let splinePath = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const cp1x = p0.x + (p1.x - p0.x) / 2;
+    const cp1y = p0.y;
+    const cp2x = p0.x + (p1.x - p0.x) / 2;
+    const cp2y = p1.y;
+    splinePath += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+  }
 
-  const areaD = `${pathD} L ${points[points.length - 1].x} ${height - paddingY} L ${points[0].x} ${height - paddingY} Z`;
+  const areaD = `${splinePath} L ${points[points.length - 1].x} ${baselineY} L ${points[0].x} ${baselineY} Z`;
 
   return (
     <div className="w-full space-y-6">
@@ -267,29 +277,44 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
           <div className="relative w-full my-1">
             <svg
               viewBox={`0 0 ${width} ${height}`}
-              className="w-full h-32 overflow-visible select-none"
+              className="w-full h-36 overflow-visible select-none"
             >
               <defs>
                 <linearGradient id="velocityGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ea580c" stopOpacity="0.22" />
+                  <stop offset="0%" stopColor="#ea580c" stopOpacity="0.25" />
+                  <stop offset="60%" stopColor="#ea580c" stopOpacity="0.08" />
                   <stop offset="100%" stopColor="#ea580c" stopOpacity="0.00" />
                 </linearGradient>
                 <filter id="glow">
-                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#ea580c" floodOpacity="0.3" />
+                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#ea580c" floodOpacity="0.35" />
                 </filter>
               </defs>
 
               {/* Grid Lines */}
-              <line x1={paddingX} y1={paddingY} x2={width - paddingX} y2={paddingY} stroke="#f1f5f9" strokeDasharray="3 3" />
-              <line x1={paddingX} y1={height / 2} x2={width - paddingX} y2={height / 2} stroke="#f1f5f9" strokeDasharray="3 3" />
-              <line x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} stroke="#e2e8f0" />
+              <line x1={paddingX} y1={paddingTop} x2={width - paddingX} y2={paddingTop} stroke="#f1f5f9" strokeDasharray="3 3" />
+              <line x1={paddingX} y1={paddingTop + usableH / 2} x2={width - paddingX} y2={paddingTop + usableH / 2} stroke="#f1f5f9" strokeDasharray="3 3" />
+              <line x1={paddingX} y1={baselineY} x2={width - paddingX} y2={baselineY} stroke="#e2e8f0" />
+
+              {/* Hover vertical guide line */}
+              {hoveredPoint !== null && (
+                <line
+                  x1={points[hoveredPoint].x}
+                  y1={paddingTop}
+                  x2={points[hoveredPoint].x}
+                  y2={baselineY}
+                  stroke="#ea580c"
+                  strokeWidth="1.5"
+                  strokeDasharray="2 2"
+                  className="transition-all"
+                />
+              )}
 
               {/* Area fill under curve */}
               <path d={areaD} fill="url(#velocityGradient)" />
 
-              {/* Stroke line */}
+              {/* Smooth spline curve line */}
               <path
-                d={pathD}
+                d={splinePath}
                 fill="none"
                 stroke="#ea580c"
                 strokeWidth="2.5"
@@ -306,7 +331,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
                     <circle
                       cx={p.x}
                       cy={p.y}
-                      r={isHovered ? 5.5 : 3.5}
+                      r={isHovered ? 6 : 3.5}
                       className="cursor-pointer transition-all duration-150"
                       fill={isHovered ? "#ea580c" : "#ffffff"}
                       stroke="#ea580c"
@@ -316,9 +341,11 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
                     />
                     <text
                       x={p.x}
-                      y={height}
+                      y={baselineY + 18}
                       textAnchor="middle"
-                      className="text-[10px] fill-slate-400 font-mono font-medium"
+                      className={`text-[10px] font-mono font-medium transition-colors ${
+                        isHovered ? 'fill-orange-600 font-bold' : 'fill-slate-400'
+                      }`}
                     >
                       {p.day}
                     </text>
