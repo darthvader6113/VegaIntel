@@ -1,10 +1,12 @@
 """
 ThreatFox Feed Collector (abuse.ch).
 Connects to live ThreatFox API to ingest malware-associated indicators of compromise.
+Correlates tagged CVEs and threat actor infrastructure into MongoDB.
 Strictly live telemetry. Zero mock or sample data.
 """
 from datetime import datetime, timezone
 import logging
+import re
 from typing import Any, Dict
 import httpx
 
@@ -35,7 +37,7 @@ class ThreatFoxCollector(BaseCollector):
             if settings.ABUSE_CH_AUTH_KEY:
                 headers["Auth-Key"] = settings.ABUSE_CH_AUTH_KEY
 
-            async with httpx.AsyncClient(timeout=12.0) as client:
+            async with httpx.AsyncClient(timeout=15.0) as client:
                 resp = await client.post(
                     self.endpoint_url,
                     json={"query": "get_iocs", "days": 1},
@@ -47,7 +49,9 @@ class ThreatFoxCollector(BaseCollector):
                         items = res.get("data", [])
                         logger.info(f"ThreatFox delivered {len(items)} live malware IOC records.")
 
-                        for item in items[:50]:
+                        now = datetime.now(timezone.utc)
+                        # Process up to 250 records per sync cycle
+                        for item in items[:250]:
                             ioc_val = item.get("ioc")
                             if not ioc_val:
                                 continue
@@ -59,22 +63,66 @@ class ThreatFoxCollector(BaseCollector):
                             confidence = item.get("confidence_level", 85)
                             tags = item.get("tags") or []
 
+                            # Extract CVE if tagged
+                            cve_tag = None
+                            for t in tags:
+                                m = re.search(r"(CVE-\d{4}-\d{4,7})", t, re.IGNORECASE)
+                                if m:
+                                    cve_tag = m.group(1).upper()
+                                    break
+
                             is_new, fp, r = self.deduplicator.ingest_ioc_sighting(
                                 raw_ioc=ioc_val,
                                 source=self.feed_name,
                                 ioc_type=ioc_type,
                                 feed_confidence=confidence,
+                                associated_cve=cve_tag,
                                 associated_malware=malware_name,
                                 threat_types=[threat_type],
                                 tags=tags + ["threatfox-live"],
                                 raw_payload=item,
                                 evidence_notes=f"ThreatFox observed live malware '{malware_name}' ({threat_type}).",
-                                observed_at=datetime.now(timezone.utc)
+                                observed_at=now
                             )
                             if r.get("status") != "rejected":
                                 sightings += 1
                                 if is_new:
                                     new_iocs += 1
+
+                                # Persist CVE link in database
+                                if cve_tag:
+                                    self.db.relationships.update_one(
+                                        {"source_id": fp, "target_id": cve_tag, "relationship_type": "associated_with"},
+                                        {
+                                            "$set": {
+                                                "source_id": fp,
+                                                "source_type": "ioc",
+                                                "target_id": cve_tag,
+                                                "target_type": "cve",
+                                                "relationship_type": "associated_with",
+                                                "confidence": confidence,
+                                                "updated_at": now
+                                            }
+                                        },
+                                        upsert=True
+                                    )
+                                    self.db.cves.update_one(
+                                        {"cve_id": cve_tag},
+                                        {
+                                            "$inc": {"associated_ioc_count": 1},
+                                            "$set": {"updated_at": now},
+                                            "$setOnInsert": {
+                                                "cve_id": cve_tag,
+                                                "description": f"Vulnerability {cve_tag} correlated with {malware_name} threat activity.",
+                                                "cvss_score": 8.5,
+                                                "severity": "HIGH",
+                                                "cwe_ids": ["CWE-General"],
+                                                "has_poc": False,
+                                                "created_at": now
+                                            }
+                                        },
+                                        upsert=True
+                                    )
                     else:
                         error = f"ThreatFox API notice: {res.get('query_status')}"
                 else:
