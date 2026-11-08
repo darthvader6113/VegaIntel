@@ -238,6 +238,17 @@ class IntelligenceOrchestrator:
         now = datetime.now(timezone.utc)
         from app.core.cve_fetcher import KNOWN_CVE_INTEL
 
+        # 0. Cleanse any legacy synthetic indicators from MongoDB persistent volume
+        synthetic_pattern = re.compile(r"trafficmanager-cloud\.net|security-update\.org|edr-telemetry\.org|packet-routing\.net", re.IGNORECASE)
+        deleted_iocs = self.db.iocs.delete_many({
+            "$or": [
+                {"ioc_value": {"$regex": synthetic_pattern}},
+                {"tags": {"$in": ["automated-enrichment", "synthetic-intel"]}}
+            ]
+        })
+        if deleted_iocs.deleted_count > 0:
+            logger.info(f"Purged {deleted_iocs.deleted_count} legacy synthetic indicators from IOC repository.")
+
         # 1. Seed feeds status
         all_feeds = [
             "CISA KEV", "NVD", "MITRE ATT&CK", "Feodo Tracker", 
