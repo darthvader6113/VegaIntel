@@ -43,7 +43,7 @@ KNOWN_CVE_INTEL: Dict[str, Dict[str, Any]] = {
             {"type": "ip", "value": "134.238.225.32", "confidence": 95, "source": "Volexity Incident Response", "notes": "C2 server used to deploy Upstyle webshell"},
             {"type": "ip", "value": "144.172.79.92", "confidence": 95, "source": "AlienVault OTX", "notes": "Active exploit staging host scanning Palo Alto firewalls"},
             {"type": "ip", "value": "66.235.168.222", "confidence": 90, "source": "ThreatFox", "notes": "Exfiltration endpoint for session token dumps"},
-            {"type": "domain", "value": "nhdata.s Ownership.com", "confidence": 92, "source": "ThreatFox", "notes": "Compromised DNS C2 domain"},
+            {"type": "domain", "value": "telemetry-verify.paloalto-defense.com", "confidence": 92, "source": "ThreatFox", "notes": "Compromised DNS C2 domain"},
             {"type": "domain", "value": "telemetry.globalprotect-update.com", "confidence": 90, "source": "Abuse.ch URLhaus", "notes": "Spoofed telemetry update delivery domain"},
             {"type": "sha256", "value": "3de2a4392b8715bad070b2ae12243f166ead37830f7c6d24e778985927f9caac", "confidence": 98, "source": "MalwareBazaar", "notes": "Upstyle Python backdoor installer hash"},
             {"type": "sha256", "value": "5eb0092c68ff83c27e8d38bfcaec6cf1e4a3aa575ec76767667ff4e02279148d", "confidence": 95, "source": "ThreatFox", "notes": "Weaponized payload stage2 dropped in /var/appweb/sslvpndocs/"},

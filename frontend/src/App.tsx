@@ -11,7 +11,6 @@ import { MalwareModule } from './components/modules/MalwareModule';
 import { PocLibraryModule } from './components/modules/PocLibraryModule';
 import { FeedMonitoringModule } from './components/modules/FeedMonitoringModule';
 import { ExportModule } from './components/modules/ExportModule';
-import { CorrelationGraphModule } from './components/modules/CorrelationGraphModule';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { RequestIocModal } from './components/common/RequestIocModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
@@ -24,6 +23,7 @@ export function App() {
   const [stats, setStats] = useState<OverviewStats | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRequestIocOpen, setIsRequestIocOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Check existing session
   useEffect(() => {
@@ -82,6 +82,8 @@ export function App() {
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         />
 
         {/* Main Content Area */}
@@ -119,9 +121,6 @@ export function App() {
                   )}
                   {activeTab === 'iocs' && (
                     <IocRepositoryModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
-                  )}
-                  {activeTab === 'graph' && (
-                    <CorrelationGraphModule />
                   )}
                   {activeTab === 'apt' && (
                     <AptGroupsModule />

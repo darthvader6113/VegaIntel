@@ -27,12 +27,11 @@ export const Header: React.FC<HeaderProps> = ({
     detections: { name: 'Detections Flow', desc: 'Interactive correlation pipeline connecting IOCs, CVEs, APTs, and Payloads' },
     cves: { name: 'Vulnerabilities', desc: 'CVE vulnerability intelligence, CVSS scores, and weaponized exploit references' },
     iocs: { name: 'Indicators (IOCs)', desc: 'Canonical indicator database with deterministic deduplication and sighting history' },
-    graph: { name: 'Threat Graph', desc: 'Interactive multi-entity correlation topology' },
     apt: { name: 'Threat Actors', desc: 'Adversary profiles, MITRE ATT&CK techniques, and active campaigns' },
     malware: { name: 'Malware & Payloads', desc: 'Ransomware strains, C2 infrastructure, and hash artifacts' },
     pocs: { name: 'Exploit Library', desc: 'Weaponized exploit metadata and proof-of-concept repository' },
     feeds: { name: 'Feed Sources', desc: 'Active threat intelligence feeds' },
-    export: { name: 'Export & API', desc: 'STIX 2.1 bundles, CSV data exports, and SIEM connectors' },
+    export: { name: 'Export & SIEM', desc: 'STIX 2.1 bundles, CSV data exports, and SIEM connectors' },
   };
 
   const current = titles[activeTab] || { name: 'Threat Intel', desc: 'Enterprise cybersecurity intelligence' };

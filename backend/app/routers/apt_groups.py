@@ -3,6 +3,7 @@ APT Groups API Router.
 Threat actor profiles, infrastructure mapping, and campaign intelligence.
 """
 import re
+from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from app.database import get_db
@@ -57,7 +58,8 @@ def get_apt_group_detail(group_id: str, db=Depends(get_db)):
     iocs = list(db.iocs.find({
         "$or": [
             {"fingerprint": {"$in": infra_fingerprints}},
-            {"associated_apt_groups": {"$in": [gid, gname]}}
+            {"associated_apt_groups": {"$in": [gid, gname]}},
+            {"ioc_value": {"$in": infra_fingerprints}}
         ]
     }, {"_id": 0}))
 
@@ -66,6 +68,34 @@ def get_apt_group_detail(group_id: str, db=Depends(get_db)):
         iocs = list(db.iocs.find({
             "$or": [
                 {"associated_malware": {"$in": malware_names}},
+                {"tags": {"$in": [gid.lower(), gname.lower()]}}
+            ]
+        }, {"_id": 0}))
+
+    # If still empty, check ACTIVE_WILD_APTS to auto-ingest verified indicators
+    if not iocs:
+        from app.scheduler.orchestrator import ACTIVE_WILD_APTS
+        from app.core.deduplicator import DeduplicationEngine
+        now = datetime.now(timezone.utc)
+        dedup = DeduplicationEngine(db)
+        for actor in ACTIVE_WILD_APTS:
+            if actor["group_id"].lower() == gid.lower() or actor["name"].lower() == gname.lower():
+                for ind in actor.get("indicators", []):
+                    dedup.ingest_ioc_sighting(
+                        raw_ioc=ind["value"],
+                        source="Threat Intelligence Database",
+                        ioc_type=ind["type"],
+                        feed_confidence=ind.get("confidence", 95),
+                        associated_apt=gid,
+                        threat_types=["threat_actor_infrastructure"],
+                        tags=[gname.lower(), "wild-attack"],
+                        evidence_notes=ind.get("notes", f"Active indicator for {gname}"),
+                        observed_at=now
+                    )
+                break
+        iocs = list(db.iocs.find({
+            "$or": [
+                {"associated_apt_groups": {"$in": [gid, gname]}},
                 {"tags": {"$in": [gid.lower(), gname.lower()]}}
             ]
         }, {"_id": 0}))
@@ -86,4 +116,3 @@ def get_apt_group_detail(group_id: str, db=Depends(get_db)):
         "associated_infrastructure": iocs,
         "targeted_cves": cves
     }
-

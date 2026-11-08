@@ -49,7 +49,10 @@ async def lifespan(app: FastAPI):
     orchestrator_instance = IntelligenceOrchestrator(db_manager.db)
     logger.info("Performing initial intelligence correlation cycle...")
     try:
-        await orchestrator_instance.run_full_cycle()
+        orchestrator_instance.seed_initial_state()
+        await orchestrator_instance.ingest_wild_threat_actors()
+        mitre = MitreAttackCollector(db_manager.db)
+        await mitre.fetch_and_process()
     except Exception as e:
         logger.error(f"Initial sync warning: {e}")
         

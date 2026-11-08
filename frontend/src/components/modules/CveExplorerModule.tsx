@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { CVE } from '../../types';
 import { api } from '../../services/api';
+import { copyToClipboard } from '../../utils/clipboard';
 
 export const CveExplorerModule: React.FC = () => {
   const [cves, setCves] = useState<CVE[]>([]);
@@ -59,10 +60,12 @@ export const CveExplorerModule: React.FC = () => {
     }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(label);
-    setTimeout(() => setCopiedText(null), 2000);
+  const handleCopy = async (text: string, label: string) => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopiedText(label);
+      setTimeout(() => setCopiedText(null), 2000);
+    }
   };
 
   const getSeverityBadge = (severity: string, score: number) => {
@@ -160,7 +163,7 @@ export const CveExplorerModule: React.FC = () => {
               <div
                 key={cve.cve_id}
                 onClick={() => openDetail(cve.cve_id)}
-                className={`p-5 rounded-xl border border-slate-200/90 bg-white hover:border-orange-300/80 hover:shadow-md cursor-pointer transition-all border-l-4 ${badge.borderAccent} flex flex-col justify-between gap-3 group`}
+                className={`p-4 rounded-lg border border-slate-200/90 bg-white hover:border-orange-300/80 hover:shadow-sm cursor-pointer transition-all border-l-4 ${badge.borderAccent} flex flex-col justify-between gap-3 group`}
               >
                 {/* Header row: ID, Badges, Dates */}
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -175,11 +178,11 @@ export const CveExplorerModule: React.FC = () => {
                       {cve.severity} {(cve.cvss_score ?? 0).toFixed(1)}
                     </span>
 
-                    {/* CISA KEV Badge */}
+                    {/* Active In The Wild Badge */}
                     {cve.severity === 'CRITICAL' && (
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1 font-semibold">
                         <Flame className="w-3 h-3 text-rose-600" />
-                        CISA KEV EXPLOITED
+                        ACTIVELY EXPLOITED
                       </span>
                     )}
 
@@ -197,7 +200,7 @@ export const CveExplorerModule: React.FC = () => {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyToClipboard(cve.cve_id, cve.cve_id);
+                        handleCopy(cve.cve_id, cve.cve_id);
                       }}
                       title="Copy CVE ID"
                       className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
@@ -255,14 +258,14 @@ export const CveExplorerModule: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+              className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto w-screen h-screen"
             >
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl"
+              className="w-full max-w-4xl max-h-[90vh] rounded-lg border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl"
             >
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/80 shrink-0">
@@ -277,7 +280,7 @@ export const CveExplorerModule: React.FC = () => {
                   {selectedCveDetail.cve.severity === 'CRITICAL' && (
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200 font-bold flex items-center gap-1">
                       <Flame className="w-3 h-3 text-rose-600" />
-                      CISA KEV ACTIVE
+                      CONFIRMED IN WILD
                     </span>
                   )}
                 </div>
@@ -443,7 +446,7 @@ export const CveExplorerModule: React.FC = () => {
                         Zero Canonical IOCs In Observed Window
                       </div>
                       <div className="text-[11px] text-slate-500 max-w-md mx-auto">
-                        Automated background telemetry continues ingesting from Abuse.ch, ThreatFox, and CISA KEV to map newly emerging C2 domains, hashes, and scanning IPs.
+                        Automated threat telemetry continues syncing from threat intelligence databases to index emerging C2 domains, hashes, and scanning IPs.
                       </div>
                     </div>
                   ) : (
@@ -465,7 +468,7 @@ export const CveExplorerModule: React.FC = () => {
                             </span>
                             <button
                               type="button"
-                              onClick={() => copyToClipboard(ioc.ioc_value, ioc.fingerprint)}
+                              onClick={() => handleCopy(ioc.ioc_value, ioc.fingerprint)}
                               className="p-1 text-slate-400 hover:text-slate-800"
                               title="Copy indicator"
                             >
@@ -528,7 +531,7 @@ export const CveExplorerModule: React.FC = () => {
                     <span className="text-slate-500 text-[11px]">OASIS STIX 2.1 Vulnerability Object:</span>
                     <button
                       type="button"
-                      onClick={() => copyToClipboard(JSON.stringify(selectedCveDetail, null, 2), 'stix-json')}
+                      onClick={() => handleCopy(JSON.stringify(selectedCveDetail, null, 2), 'stix-json')}
                       className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
                     >
                       {copiedText === 'stix-json' ? (

@@ -66,14 +66,14 @@ export const RequestIocModal: React.FC<RequestIocModalProps> = ({ isOpen, onClos
 
     try {
       setLoading(true);
-      setLoadingStep('Connecting to NIST NVD & CISA KEV feeds...');
+      setLoadingStep('Querying Threat Intelligence Database for vulnerability telemetry...');
 
       setTimeout(() => {
-        setLoadingStep('Querying ThreatFox, AlienVault OTX & URLhaus for active C2 indicators...');
+        setLoadingStep('Correlating active C2 indicators and adversary infrastructure...');
       }, 700);
 
       setTimeout(() => {
-        setLoadingStep('Running deterministic deduplication & false positive prevention...');
+        setLoadingStep('Verifying high-confidence indicators and running deduplication...');
       }, 1400);
 
       const res = await api.fetchIOCsByCVE(clean);
@@ -146,7 +146,7 @@ export const RequestIocModal: React.FC<RequestIocModalProps> = ({ isOpen, onClos
               </h3>
             </div>
             <p className="text-xs text-slate-500 font-sans leading-relaxed">
-              Provide any CVE identifier (e.g. <strong className="text-slate-800 font-mono">CVE-2024-3400</strong>). VegaIntel queries NIST NVD, CISA KEV, ThreatFox, AlienVault OTX, and URLhaus to discover, deduplicate, and ingest all correlated C2 indicators.
+              Provide any CVE identifier (e.g. <strong className="text-slate-800 font-mono">CVE-2024-3400</strong>). VegaIntel correlates verified telemetry from threat intelligence databases to discover, deduplicate, and catalog all active C2 infrastructure indicators.
             </p>
           </div>
           <button

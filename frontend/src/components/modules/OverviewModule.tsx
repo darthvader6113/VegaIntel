@@ -37,7 +37,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
       {/* Sleek KPI Cards - Vercel / Neon style */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Vulnerabilities */}
-        <div className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="p-4 rounded-lg border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between shadow-xs">
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-1">
               <span className="text-xs font-medium text-slate-500">Vulnerabilities</span>
@@ -60,7 +60,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
         </div>
 
         {/* Indicators */}
-        <div className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="p-4 rounded-lg border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between shadow-xs">
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-1">
               <span className="text-xs font-medium text-slate-500">Indicators (IOCs)</span>
@@ -83,7 +83,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
         </div>
 
         {/* Threat Actors */}
-        <div className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="p-4 rounded-lg border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between shadow-xs">
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-1">
               <span className="text-xs font-medium text-slate-500">Threat Actors</span>
@@ -106,7 +106,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
         </div>
 
         {/* Malware Families */}
-        <div className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="p-4 rounded-lg border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between shadow-xs">
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-1">
               <span className="text-xs font-medium text-slate-500">Malware & C2</span>
@@ -130,9 +130,9 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
       </div>
 
       {/* Middle Section: Indicator Distribution & Platform Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Indicator Type Breakdown */}
-        <div className="p-5 rounded-xl border border-slate-200 bg-white space-y-4">
+        <div className="p-5 rounded-lg border border-slate-200 bg-white space-y-4 shadow-xs">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-xs font-semibold text-slate-900">
               Indicator Distribution
@@ -165,7 +165,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
         </div>
 
         {/* Quick Intelligence Shortcuts */}
-        <div className="lg:col-span-2 p-5 rounded-xl border border-slate-200 bg-white space-y-4 flex flex-col justify-between">
+        <div className="lg:col-span-2 p-5 rounded-lg border border-slate-200 bg-white space-y-4 flex flex-col justify-between shadow-xs">
           <div>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-xs font-semibold text-slate-900">
@@ -182,7 +182,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
             <button
               type="button"
               onClick={() => onNavigate('detections')}
-              className="p-3 rounded-lg border border-slate-200 hover:border-orange-300 hover:bg-orange-50/50 text-left transition-all group"
+              className="p-3 rounded-md border border-slate-200 hover:border-orange-300 hover:bg-orange-50/50 text-left transition-all group"
             >
               <div className="text-xs font-medium text-slate-900 group-hover:text-orange-600">Detections Flow</div>
               <div className="text-[11px] text-slate-500 mt-0.5">Live visual threat graph</div>
@@ -190,7 +190,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
             <button
               type="button"
               onClick={() => onNavigate('cves')}
-              className="p-3 rounded-lg border border-slate-200 hover:border-orange-300 hover:bg-orange-50/50 text-left transition-all group"
+              className="p-3 rounded-md border border-slate-200 hover:border-orange-300 hover:bg-orange-50/50 text-left transition-all group"
             >
               <div className="text-xs font-medium text-slate-900 group-hover:text-orange-600">CVE Explorer</div>
               <div className="text-[11px] text-slate-500 mt-0.5">CVSS & exploit analysis</div>
@@ -198,7 +198,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
             <button
               type="button"
               onClick={() => onNavigate('export')}
-              className="p-3 rounded-lg border border-slate-200 hover:border-orange-300 hover:bg-orange-50/50 text-left transition-all group"
+              className="p-3 rounded-md border border-slate-200 hover:border-orange-300 hover:bg-orange-50/50 text-left transition-all group"
             >
               <div className="text-xs font-medium text-slate-900 group-hover:text-orange-600">SIEM Export</div>
               <div className="text-[11px] text-slate-500 mt-0.5">STIX 2.1 & CSV bundles</div>
@@ -208,7 +208,7 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
       </div>
 
       {/* Live Threat Sightings Stream */}
-      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden shadow-xs">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-900">
             <Activity className="w-4 h-4 text-orange-500" />
