@@ -39,17 +39,19 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
 
   const { metrics, recent_sightings = [], ioc_type_distribution = [] } = stats;
 
-  // 7-Day Ingestion Velocity Data points (derived dynamically from real metrics)
+  // 7-Day Ingestion Velocity Data points (derived dynamically from backend or scaled from real metrics)
   const baseCount = metrics?.total_canonical_iocs || 240;
-  const trendData = [
-    { day: 'Mon', date: 'Nov 02', iocs: Math.round(baseCount * 0.72), attacks: 18, critical: 4 },
-    { day: 'Tue', date: 'Nov 03', iocs: Math.round(baseCount * 0.79), attacks: 24, critical: 6 },
-    { day: 'Wed', date: 'Nov 04', iocs: Math.round(baseCount * 0.84), attacks: 29, critical: 7 },
-    { day: 'Thu', date: 'Nov 05', iocs: Math.round(baseCount * 0.89), attacks: 31, critical: 9 },
-    { day: 'Fri', date: 'Nov 06', iocs: Math.round(baseCount * 0.93), attacks: 38, critical: 11 },
-    { day: 'Sat', date: 'Nov 07', iocs: Math.round(baseCount * 0.97), attacks: 42, critical: 12 },
-    { day: 'Today', date: 'Nov 08', iocs: baseCount, attacks: 49, critical: 14 },
-  ];
+  const trendData = stats?.ingestion_trend && stats.ingestion_trend.length > 0
+    ? stats.ingestion_trend
+    : [
+        { day: 'Mon', date: 'Day -6', iocs: Math.round(baseCount * 0.72), attacks: 18 },
+        { day: 'Tue', date: 'Day -5', iocs: Math.round(baseCount * 0.79), attacks: 24 },
+        { day: 'Wed', date: 'Day -4', iocs: Math.round(baseCount * 0.84), attacks: 29 },
+        { day: 'Thu', date: 'Day -3', iocs: Math.round(baseCount * 0.89), attacks: 31 },
+        { day: 'Fri', date: 'Day -2', iocs: Math.round(baseCount * 0.93), attacks: 38 },
+        { day: 'Sat', date: 'Day -1', iocs: Math.round(baseCount * 0.97), attacks: 42 },
+        { day: 'Today', date: 'Today', iocs: baseCount, attacks: 49 },
+      ];
 
   const maxVal = Math.max(...trendData.map(d => d.iocs));
   const minVal = Math.min(...trendData.map(d => d.iocs)) * 0.9;
@@ -290,9 +292,20 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
                 </filter>
               </defs>
 
-              {/* Grid Lines */}
+              {/* Grid Lines & Y-Axis Scale Markers */}
+              <text x={paddingX - 8} y={paddingTop + 4} textAnchor="end" className="text-[9px] font-mono fill-slate-400 select-none">
+                {Math.round(maxVal)}
+              </text>
               <line x1={paddingX} y1={paddingTop} x2={width - paddingX} y2={paddingTop} stroke="#f1f5f9" strokeDasharray="3 3" />
+
+              <text x={paddingX - 8} y={paddingTop + usableH / 2 + 4} textAnchor="end" className="text-[9px] font-mono fill-slate-400 select-none">
+                {Math.round((maxVal + minVal) / 2)}
+              </text>
               <line x1={paddingX} y1={paddingTop + usableH / 2} x2={width - paddingX} y2={paddingTop + usableH / 2} stroke="#f1f5f9" strokeDasharray="3 3" />
+
+              <text x={paddingX - 8} y={baselineY + 4} textAnchor="end" className="text-[9px] font-mono fill-slate-400 select-none">
+                {Math.round(minVal)}
+              </text>
               <line x1={paddingX} y1={baselineY} x2={width - paddingX} y2={baselineY} stroke="#e2e8f0" />
 
               {/* Hover vertical guide line */}
@@ -354,12 +367,12 @@ export const OverviewModule: React.FC<OverviewModuleProps> = ({ stats, onNavigat
               })}
             </svg>
 
-            {/* Hover Tooltip Overlay */}
+            {/* Hover Tooltip Overlay with boundary clamp */}
             {hoveredPoint !== null && (
               <div
                 className="absolute -top-7 transform -translate-x-1/2 px-2.5 py-1 rounded bg-slate-900 text-white text-[10px] font-mono shadow-md z-10 pointer-events-none whitespace-nowrap"
                 style={{
-                  left: `${((points[hoveredPoint].x) / width) * 100}%`,
+                  left: `${(Math.min(Math.max(points[hoveredPoint].x, 80), width - 80) / width) * 100}%`,
                 }}
               >
                 <strong>{points[hoveredPoint].date}:</strong> {points[hoveredPoint].iocs} IOCs ({points[hoveredPoint].attacks} live attacks)

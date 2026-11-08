@@ -59,6 +59,18 @@ export const CveExplorerModule: React.FC<CveExplorerModuleProps> = ({ filters })
     fetchCves();
   }, [activeSearch, activeSeverity, activePoc]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedCveDetail) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedCveDetail]);
+
   const openDetail = async (cveId: string) => {
     try {
       setActiveModalTab('dossier');

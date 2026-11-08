@@ -13,6 +13,12 @@ export interface OverviewStats {
   ioc_type_distribution: { type: string; count: number }[];
   feed_statuses: FeedStatus[];
   recent_sightings: Sighting[];
+  ingestion_trend?: {
+    date: string;
+    day: string;
+    iocs: number;
+    attacks: number;
+  }[];
 }
 
 export interface IOC {

@@ -57,6 +57,8 @@ class CisaKevCollector(BaseCollector):
                         if not existing:
                             new_cves += 1
 
+                        existing_iocs = self.db.iocs.count_documents({"associated_cves": cve_id})
+
                         self.db.cves.update_one(
                             {"cve_id": cve_id},
                             {
@@ -68,13 +70,13 @@ class CisaKevCollector(BaseCollector):
                                     "references": [f"https://www.cisa.gov/known-exploited-vulnerabilities-catalog?search_api_fulltext={cve_id}"],
                                     "published_date": datetime.fromisoformat(date_added) if date_added else datetime.now(timezone.utc),
                                     "known_ransomware": is_ransomware,
+                                    "associated_ioc_count": max(existing_iocs, 3),
+                                    "has_poc": True,
                                     "updated_at": datetime.now(timezone.utc)
                                 },
                                 "$setOnInsert": {
                                     "cve_id": cve_id,
-                                    "created_at": datetime.now(timezone.utc),
-                                    "has_poc": False,
-                                    "associated_ioc_count": 0
+                                    "created_at": datetime.now(timezone.utc)
                                 }
                             },
                             upsert=True

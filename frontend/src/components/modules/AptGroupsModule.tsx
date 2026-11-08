@@ -39,6 +39,18 @@ export const AptGroupsModule: React.FC<AptGroupsModuleProps> = ({ filters }) => 
     fetchGroups();
   }, [activeSearch, activeRegion]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedGroup) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedGroup]);
+
   const openGroup = async (groupId: string) => {
     try {
       const data = await api.getAPTDetail(groupId);
