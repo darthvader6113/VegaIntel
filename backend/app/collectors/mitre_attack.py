@@ -165,31 +165,9 @@ class MitreAttackCollector:
                 synced_count += 1
 
         else:
-            # Authoritative real MITRE fallback (from verified wild APT catalog)
-            from app.scheduler.orchestrator import ACTIVE_WILD_APTS
-            for g in ACTIVE_WILD_APTS:
-                self.db.apt_groups.update_one(
-                    {"name": g["name"]},
-                    {
-                        "$set": {
-                            "group_id": g["group_id"],
-                            "name": g["name"],
-                            "aliases": g.get("aliases", []),
-                            "origin_country": g.get("origin_country", "Transnational"),
-                            "description": g.get("description", ""),
-                            "target_sectors": g.get("target_sectors", ["Enterprise", "Government"]),
-                            "techniques": g.get("techniques", []),
-                            "associated_malware": g.get("associated_malware", []),
-                            "associated_cves": g.get("associated_cves", []),
-                            "updated_at": now
-                        },
-                        "$setOnInsert": {
-                            "created_at": now
-                        }
-                    },
-                    upsert=True
-                )
-                synced_count += 1
+            # If live API unavailable, maintain existing database records without synthetic data
+            logger.warning("Official MITRE STIX API currently unreachable. Retaining live synchronized threat actors in DB.")
+            synced_count = self.db.apt_groups.count_documents({})
 
         # Update feed status in database
         self.db.feed_status.update_one(

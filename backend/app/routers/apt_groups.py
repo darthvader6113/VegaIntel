@@ -72,27 +72,42 @@ def get_apt_group_detail(group_id: str, db=Depends(get_db)):
             ]
         }, {"_id": 0}))
 
-    # If still empty, check ACTIVE_WILD_APTS to auto-ingest verified indicators
+    # If direct IOCs are still unlinked, query live threat intelligence feeds (ThreatFox) for this threat actor
     if not iocs:
-        from app.scheduler.orchestrator import ACTIVE_WILD_APTS
-        from app.core.deduplicator import DeduplicationEngine
-        now = datetime.now(timezone.utc)
-        dedup = DeduplicationEngine(db)
-        for actor in ACTIVE_WILD_APTS:
-            if actor["group_id"].lower() == gid.lower() or actor["name"].lower() == gname.lower():
-                for ind in actor.get("indicators", []):
-                    dedup.ingest_ioc_sighting(
-                        raw_ioc=ind["value"],
-                        source="Threat Intelligence Database",
-                        ioc_type=ind["type"],
-                        feed_confidence=ind.get("confidence", 95),
-                        associated_apt=gid,
-                        threat_types=["threat_actor_infrastructure"],
-                        tags=[gname.lower(), "wild-attack"],
-                        evidence_notes=ind.get("notes", f"Active indicator for {gname}"),
-                        observed_at=now
-                    )
-                break
+        try:
+            import httpx
+            from app.core.deduplicator import DeduplicationEngine
+            now = datetime.now(timezone.utc)
+            dedup = DeduplicationEngine(db)
+
+            # Query ThreatFox API for real threat actor indicators
+            search_query = gname.lower().replace(" ", "").replace("-", "")
+            with httpx.Client(timeout=3.5) as client:
+                resp = client.post(
+                    "https://threatfox-api.abuse.ch/api/v1/",
+                    json={"query": "tag_info", "tag": search_query},
+                    headers={"User-Agent": "VegaIntel-Threat-Platform/1.0"}
+                )
+                if resp.status_code == 200:
+                    tdata = resp.json()
+                    if tdata.get("query_status") == "ok":
+                        for item in tdata.get("data", [])[:15]:
+                            val = item.get("ioc")
+                            if val:
+                                dedup.ingest_ioc_sighting(
+                                    raw_ioc=val,
+                                    source="Abuse.ch ThreatFox API",
+                                    ioc_type=item.get("ioc_type", "domain"),
+                                    feed_confidence=item.get("confidence_level", 85),
+                                    associated_apt=gid,
+                                    threat_types=["threat_actor_infrastructure", "c2_node"],
+                                    tags=[gname.lower(), "threatfox-live"],
+                                    evidence_notes=f"Active threat telemetry cataloged for {gname}",
+                                    observed_at=now
+                                )
+        except Exception:
+            pass
+
         iocs = list(db.iocs.find({
             "$or": [
                 {"associated_apt_groups": {"$in": [gid, gname]}},
