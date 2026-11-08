@@ -121,10 +121,14 @@ db_manager = DatabaseManager()
 
 def get_db():
     """Dependency injector for FastAPI endpoints."""
+    if db_manager.db is None:
+        db_manager.connect()
     return db_manager.db
 
 
 def get_redis():
     """Dependency injector for Redis cache."""
+    if db_manager.redis_client is None and not db_manager.is_mock_redis:
+        db_manager.connect()
     return db_manager.redis_client
 

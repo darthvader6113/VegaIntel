@@ -62,22 +62,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
       if (isRegister) {
         // Registration Flow
         const token = await getRecaptchaToken('register');
-        await api.register({
-          email: email.trim(),
-          password,
+        const regRes = await api.register({
+          email: email.trim().toLowerCase(),
+          password: password.trim(),
           full_name: fullName.trim() || undefined,
           organization: organization.trim() || undefined,
           recaptcha_token: token || undefined,
         });
 
-        // Auto-login after registration
-        const loginToken = await getRecaptchaToken('login');
-        const loginRes = await api.login(email.trim(), password, loginToken || undefined);
-        onLoginSuccess(loginRes.user);
+        onLoginSuccess(regRes.user);
       } else {
         // Login Flow
         const token = await getRecaptchaToken('login');
-        const res = await api.login(email.trim(), password, token || undefined);
+        const res = await api.login(email.trim().toLowerCase(), password.trim(), token || undefined);
         onLoginSuccess(res.user);
       }
     } catch (err: any) {
@@ -85,6 +82,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDemoLogin = () => {
+    setEmail('analyst@vegaintel.io');
+    setPassword('VegaIntel2026!');
+    setIsRegister(false);
+    setErrorMsg(null);
   };
 
   return (
@@ -233,7 +237,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
               <input
                 type="password"
                 required
-                minLength={8}
+                minLength={6}
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -242,7 +246,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             </div>
             {isRegister && (
               <span className="text-[10px] text-slate-400 mt-1 block">
-                Must be at least 8 characters long.
+                Must be at least 6 characters long.
               </span>
             )}
           </div>
@@ -259,6 +263,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             <span>{loading ? 'Processing...' : isRegister ? 'Create Account' : 'Authenticate'}</span>
             {!loading && <ArrowRight className="w-4 h-4" />}
           </button>
+
+          {!isRegister && (
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              className="w-full py-2 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-[11px] font-mono text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <span>Auto-Fill Demo Analyst Credentials</span>
+            </button>
+          )}
         </form>
 
         {/* Security Notice */}

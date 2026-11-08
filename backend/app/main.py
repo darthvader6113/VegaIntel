@@ -25,6 +25,7 @@ from app.routers import (
     pocs,
 )
 from app.scheduler.orchestrator import IntelligenceOrchestrator
+from app.collectors.mitre_attack import MitreAttackCollector
 
 # Configure structured logging
 logging.basicConfig(

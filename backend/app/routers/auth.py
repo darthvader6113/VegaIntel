@@ -4,6 +4,7 @@ Handles user registration, login with useremail and password, and profile retrie
 """
 from datetime import datetime, timezone
 import logging
+import re
 import uuid
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, status
@@ -92,8 +93,15 @@ def get_current_user(
 async def register(req: UserRegisterRequest, db=Depends(get_db)):
     await verify_recaptcha(req.recaptcha_token, action="register")
 
-    # Check if user already exists
-    existing = db.users.find_one({"email": req.email.lower()})
+    email_clean = req.email.lower().strip()
+
+    # Check if user already exists (case-insensitive and trimmed)
+    existing = db.users.find_one({
+        "$or": [
+            {"email": email_clean},
+            {"email": {"$regex": f"^{re.escape(email_clean)}$", "$options": "i"}}
+        ]
+    })
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -104,23 +112,23 @@ async def register(req: UserRegisterRequest, db=Depends(get_db)):
     now = datetime.now(timezone.utc)
     user_doc = {
         "user_id": user_id,
-        "email": req.email.lower(),
+        "email": email_clean,
         "password_hash": hash_password(req.password),
-        "full_name": req.full_name or "Security Analyst",
+        "full_name": (req.full_name or "Security Analyst").strip(),
         "role": "analyst",
-        "organization": req.organization or "SOC / CTI Team",
+        "organization": (req.organization or "SOC / CTI Team").strip(),
         "created_at": now,
         "last_login": now
     }
     db.users.insert_one(user_doc)
 
-    token = create_access_token({"sub": req.email.lower(), "user_id": user_id, "role": "analyst"})
+    token = create_access_token({"sub": email_clean, "user_id": user_id, "role": "analyst"})
     return TokenResponse(
         access_token=token,
         token_type="bearer",
         user=UserResponse(
             user_id=user_id,
-            email=req.email.lower(),
+            email=email_clean,
             full_name=user_doc["full_name"],
             role="analyst",
             organization=user_doc["organization"],
@@ -135,7 +143,13 @@ async def login(req: UserLoginRequest, db=Depends(get_db)):
     await verify_recaptcha(req.recaptcha_token, action="login")
 
     email_clean = req.email.lower().strip()
-    user = db.users.find_one({"email": email_clean})
+    user = db.users.find_one({
+        "$or": [
+            {"email": email_clean},
+            {"email": req.email.strip()},
+            {"email": {"$regex": f"^{re.escape(email_clean)}$", "$options": "i"}}
+        ]
+    })
 
     if not user or not verify_password(req.password, user.get("password_hash", "")):
         raise HTTPException(
@@ -144,10 +158,10 @@ async def login(req: UserLoginRequest, db=Depends(get_db)):
         )
 
     now = datetime.now(timezone.utc)
-    db.users.update_one({"email": email_clean}, {"$set": {"last_login": now}})
+    db.users.update_one({"_id": user.get("_id")} if "_id" in user else {"email": user["email"]}, {"$set": {"last_login": now}})
 
     token = create_access_token({
-        "sub": email_clean,
+        "sub": user["email"],
         "user_id": user.get("user_id"),
         "role": user.get("role", "analyst")
     })

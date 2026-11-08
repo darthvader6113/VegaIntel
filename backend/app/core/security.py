@@ -21,8 +21,17 @@ def hash_password(plain_password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plaintext password against the stored bcrypt hash."""
+    if not plain_password or not hashed_password:
+        return False
     try:
-        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+        # 1. Exact match check
+        if bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8")):
+            return True
+        # 2. Tolerant check: trimmed whitespace
+        trimmed = plain_password.strip()
+        if trimmed != plain_password and bcrypt.checkpw(trimmed.encode("utf-8"), hashed_password.encode("utf-8")):
+            return True
+        return False
     except Exception:
         return False
 

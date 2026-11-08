@@ -264,6 +264,21 @@ class IntelligenceOrchestrator:
                 upsert=True
             )
 
+        # Ensure default analyst account is seeded
+        from app.core.security import hash_password
+        default_email = "analyst@vegaintel.io"
+        if not self.db.users.find_one({"email": default_email}):
+            self.db.users.insert_one({
+                "user_id": "usr-default-analyst-001",
+                "email": default_email,
+                "password_hash": hash_password("VegaIntel2026!"),
+                "full_name": "Senior CTI Analyst",
+                "role": "analyst",
+                "organization": "Enterprise Cyber Defense",
+                "created_at": now,
+                "last_login": now
+            })
+
         # 2. Seed verified CVEs and their Correlated Threat Indicators & PoCs
         for cid, info in KNOWN_CVE_INTEL.items():
             ioc_list = info.get("iocs", [])
