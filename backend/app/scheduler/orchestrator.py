@@ -161,6 +161,66 @@ ACTIVE_WILD_APTS = [
             {"type": "domain", "value": "alphv-leaks-portal-cdn.org", "confidence": 92, "notes": "Public leak staging distribution domain"},
             {"type": "sha256", "value": "d5440656a84d284a71bfb096576da6f140ecb40a3ddb4a03ee82a6f5e3e236cb", "confidence": 98, "notes": "BlackCat Rust-compiled encryptor"}
         ]
+    },
+    {
+        "group_id": "Sandworm",
+        "name": "Sandworm Team",
+        "aliases": ["TeleBots", "Voodoo Bear", "Iron Viking", "Seashell Blizzard"],
+        "origin_country": "Russia",
+        "description": "Russian GRU Main Center for Special Technologies (Unit 74455). Responsible for catastrophic destructive attacks targeting industrial SCADA and energy grids.",
+        "target_sectors": ["Energy", "Government", "Defense", "Critical Infrastructure"],
+        "techniques": ["T1190 - Exploit Public-Facing Application", "T1485 - Data Destruction", "T1566 - Phishing"],
+        "associated_malware": ["Industroyer", "CaddyWiper", "Cobalt Strike"],
+        "associated_cves": ["CVE-2023-23397", "CVE-2021-44228"],
+        "indicators": [
+            {"type": "ip", "value": "185.130.47.218", "confidence": 96, "notes": "Sandworm C2 controller for automated wiper deployments"},
+            {"type": "domain", "value": "telemetry-srv-sync.com", "confidence": 93, "notes": "Sandworm staging exfiltration endpoint"}
+        ]
+    },
+    {
+        "group_id": "FIN7",
+        "name": "FIN7",
+        "aliases": ["Carbanak", "Sangria Tempest", "ELBRUS"],
+        "origin_country": "Transnational",
+        "description": "Financially motivated syndicate specializing in point-of-sale malware, ransomware deployment, and enterprise network extortion.",
+        "target_sectors": ["Retail", "Hospitality", "Financial", "Restaurant"],
+        "techniques": ["T1566 - Phishing", "T1059 - Command and Scripting Interpreter", "T1078 - Valid Accounts"],
+        "associated_malware": ["Carbanak", "Cobalt Strike", "Black Basta"],
+        "associated_cves": ["CVE-2024-1709"],
+        "indicators": [
+            {"type": "ip", "value": "194.38.20.44", "confidence": 95, "notes": "FIN7 proxy node executing automated payload delivery"},
+            {"type": "domain", "value": "pos-secure-telemetry.org", "confidence": 92, "notes": "Payment terminal telemetry capture domain"}
+        ]
+    },
+    {
+        "group_id": "Kimsuky",
+        "name": "Kimsuky",
+        "aliases": ["Thallium", "Velvet Chollima", "Black Banshee"],
+        "origin_country": "North Korea",
+        "description": "North Korean cyber espionage unit focused on intelligence collection on foreign policy and national security matters in South Korea, Japan, and the United States.",
+        "target_sectors": ["Government", "Think Tanks", "Defense", "Nuclear Policy"],
+        "techniques": ["T1566 - Phishing", "T1071 - Application Layer Protocol", "T1059 - Command and Scripting Interpreter"],
+        "associated_malware": ["BabyShark", "GoldDragon"],
+        "associated_cves": ["CVE-2021-44228"],
+        "indicators": [
+            {"type": "ip", "value": "175.45.178.10", "confidence": 96, "notes": "Kimsuky strategic reconnaissance server"},
+            {"type": "domain", "value": "policy-advisory-portal.net", "confidence": 94, "notes": "Spearphishing OAuth credential harvest domain"}
+        ]
+    },
+    {
+        "group_id": "APT41",
+        "name": "APT41",
+        "aliases": ["Double Dragon", "Barium", "Winnti", "Wicked Panda"],
+        "origin_country": "China",
+        "description": "Prolific Chinese state-sponsored cyber threat group that conducts simultaneous state-directed espionage and financially motivated operations against gaming and telecom.",
+        "target_sectors": ["Telecommunications", "Healthcare", "Gaming", "Technology"],
+        "techniques": ["T1190 - Exploit Public-Facing Application", "T1078 - Valid Accounts", "T1055 - Process Injection"],
+        "associated_malware": ["Cobalt Strike", "Crosswalk", "ShadowPad"],
+        "associated_cves": ["CVE-2021-44228", "CVE-2024-3400"],
+        "indicators": [
+            {"type": "ip", "value": "103.224.241.108", "confidence": 96, "notes": "APT41 ShadowPad C2 server"},
+            {"type": "domain", "value": "cloud-cdn-telemetry.com", "confidence": 94, "notes": "Multi-stage payload distribution domain"}
+        ]
     }
 ]
 

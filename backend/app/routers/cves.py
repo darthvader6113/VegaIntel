@@ -62,24 +62,21 @@ def get_cve_detail(cve_id: str, db=Depends(get_db)):
         ]
     }, {"_id": 0}))
 
-    # If no IOCs yet, auto-enrich on demand from OSINT indicators
+    # If no IOCs yet, auto-query live threat databases for genuine indicators
     if not iocs:
-        from datetime import datetime, timezone
+        import asyncio
         from app.core.cve_fetcher import CVEIntelligenceFetcher
         fetcher = CVEIntelligenceFetcher(db)
-        candidates = fetcher._generate_synthetic_intel_for_cve(cve_id, cve.get("description", ""), cve.get("severity", "HIGH"))
-        for cand in candidates:
-            fetcher.dedup_engine.ingest_ioc_sighting(
-                raw_ioc=cand["value"],
-                source=cand.get("source", "AlienVault OTX"),
-                ioc_type=cand.get("type"),
-                feed_confidence=cand.get("confidence", 90),
-                associated_cve=cve_id,
-                threat_types=["exploit_delivery", "c2_infrastructure"],
-                tags=[cve_id, "automated-enrichment"],
-                evidence_notes=cand.get("notes", f"Observed actively targeting {cve_id}"),
-                observed_at=datetime.now(timezone.utc)
-            )
+        try:
+            # Run async fetch in current event loop or new loop safely
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Scheduled task or existing loop
+                asyncio.create_task(fetcher.fetch_and_store_cve_iocs(cve_id))
+            else:
+                loop.run_until_complete(fetcher.fetch_and_store_cve_iocs(cve_id))
+        except Exception:
+            pass
         iocs = list(db.iocs.find({"associated_cves": cve_id}, {"_id": 0}))
 
     # Fetch PoCs from both poc_references and pocs collections
