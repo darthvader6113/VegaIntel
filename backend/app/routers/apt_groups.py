@@ -48,7 +48,10 @@ def get_apt_group_detail(group_id: str, db=Depends(get_db)):
     # Mapped infrastructure (IOCs)
     infra_relations = list(db.relationships.find({
         "source_id": {"$in": [gid, gname]},
-        "relationship_type": {"$in": ["uses_infrastructure", "associated_with", "c2", "uses"]}
+        "$or": [
+            {"relationship_type": {"$in": ["uses_infrastructure", "associated_with", "c2", "uses"]}},
+            {"relation_type": {"$in": ["uses_infrastructure", "associated_with", "c2", "uses"]}}
+        ]
     }, {"_id": 0}))
     infra_fingerprints = [r["target_id"] for r in infra_relations]
     iocs = list(db.iocs.find({
@@ -61,7 +64,10 @@ def get_apt_group_detail(group_id: str, db=Depends(get_db)):
     # Targeted CVEs
     cve_relations = list(db.relationships.find({
         "source_id": {"$in": [gid, gname]},
-        "relationship_type": {"$in": ["exploits_cve", "exploits", "targets"]}
+        "$or": [
+            {"relationship_type": {"$in": ["exploits_cve", "exploits", "targets"]}},
+            {"relation_type": {"$in": ["exploits_cve", "exploits", "targets"]}}
+        ]
     }, {"_id": 0}))
     cve_ids = list(set([r["target_id"] for r in cve_relations] + group.get("associated_cves", [])))
     cves = list(db.cves.find({"cve_id": {"$in": cve_ids}}, {"_id": 0}))

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
   Search,
@@ -118,8 +119,19 @@ export const RequestIocModal: React.FC<RequestIocModalProps> = ({ isOpen, onClos
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      <div className="w-full max-w-2xl max-h-[90vh] rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-150">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
+        className="w-full max-w-2xl max-h-[90vh] rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xl flex flex-col"
+      >
         {/* Header */}
         <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/80 shrink-0">
           <div className="space-y-1 min-w-0 pr-4">
@@ -356,7 +368,7 @@ export const RequestIocModal: React.FC<RequestIocModalProps> = ({ isOpen, onClos
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

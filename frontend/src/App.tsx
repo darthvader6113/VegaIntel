@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Sidebar, TabType } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { OverviewModule } from './components/modules/OverviewModule';
@@ -97,40 +98,49 @@ export function App() {
 
           {/* Scrollable Module Canvas (Full Width, Zero Horizontal Overflow) */}
           <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-8 min-w-0">
-            <div className="w-full space-y-6">
-              <ErrorBoundary fallbackTitle={`Module: ${activeTab.toUpperCase()}`}>
-                {activeTab === 'overview' && (
-                  <OverviewModule stats={stats} onNavigate={setActiveTab} />
-                )}
-                {activeTab === 'detections' && (
-                  <ReactFlowDetectionsModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
-                )}
-                {activeTab === 'cves' && (
-                  <CveExplorerModule />
-                )}
-                {activeTab === 'iocs' && (
-                  <IocRepositoryModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
-                )}
-                {activeTab === 'graph' && (
-                  <CorrelationGraphModule />
-                )}
-                {activeTab === 'apt' && (
-                  <AptGroupsModule />
-                )}
-                {activeTab === 'malware' && (
-                  <MalwareModule />
-                )}
-                {activeTab === 'pocs' && (
-                  <PocLibraryModule />
-                )}
-                {activeTab === 'feeds' && (
-                  <FeedMonitoringModule />
-                )}
-                {activeTab === 'export' && (
-                  <ExportModule />
-                )}
-              </ErrorBoundary>
-            </div>
+            <ErrorBoundary fallbackTitle={`Module: ${activeTab.toUpperCase()}`}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.16, ease: 'easeOut' }}
+                  className="w-full space-y-6"
+                >
+                  {activeTab === 'overview' && (
+                    <OverviewModule stats={stats} onNavigate={setActiveTab} />
+                  )}
+                  {activeTab === 'detections' && (
+                    <ReactFlowDetectionsModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
+                  )}
+                  {activeTab === 'cves' && (
+                    <CveExplorerModule />
+                  )}
+                  {activeTab === 'iocs' && (
+                    <IocRepositoryModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
+                  )}
+                  {activeTab === 'graph' && (
+                    <CorrelationGraphModule />
+                  )}
+                  {activeTab === 'apt' && (
+                    <AptGroupsModule />
+                  )}
+                  {activeTab === 'malware' && (
+                    <MalwareModule />
+                  )}
+                  {activeTab === 'pocs' && (
+                    <PocLibraryModule />
+                  )}
+                  {activeTab === 'feeds' && (
+                    <FeedMonitoringModule />
+                  )}
+                  {activeTab === 'export' && (
+                    <ExportModule />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </ErrorBoundary>
           </main>
         </div>
 

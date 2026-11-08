@@ -46,7 +46,7 @@ class IntelligenceOrchestrator:
             minutes=interval,
             id="threat_intelligence_cycle",
             replace_existing=True,
-            next_run_time=datetime.now()
+            next_run_time=datetime.now(timezone.utc)
         )
         self.scheduler.start()
         logger.info(f"Automated threat collection scheduled every {interval} minutes.")
@@ -105,7 +105,10 @@ class IntelligenceOrchestrator:
                 if ioc_count == 0:
                     ioc_count = self.db.relationships.count_documents({
                         "target_id": cid,
-                        "relationship_type": {"$in": ["associated_with", "indicates", "targets"]}
+                        "$or": [
+                            {"relationship_type": {"$in": ["associated_with", "indicates", "targets"]}},
+                            {"relation_type": {"$in": ["associated_with", "indicates", "targets"]}}
+                        ]
                     })
                 self.db.cves.update_one({"cve_id": cid}, {"$set": {"associated_ioc_count": ioc_count}})
 
