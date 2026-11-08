@@ -18,3 +18,4 @@ export const Portal: React.FC<PortalProps> = ({ children }) => {
 
   return createPortal(children, document.body);
 };
+
