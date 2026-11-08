@@ -255,7 +255,7 @@ export const RequestIocModal: React.FC<RequestIocModalProps> = ({ isOpen, onClos
                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="text-[10px] text-slate-400 block uppercase">CVSS Score</span>
                   <span className="text-sm font-bold text-slate-900 mt-0.5 block">
-                    {result.cve_details.cvss_score.toFixed(1)} ({result.cve_details.severity})
+                    {(result.cve_details?.cvss_score ?? 0).toFixed(1)} ({result.cve_details?.severity || 'HIGH'})
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-200">

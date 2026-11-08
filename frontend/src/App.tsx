@@ -81,7 +81,6 @@ export function App() {
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          dedupRatio={stats?.metrics.deduplication_ratio_pct ?? 0}
         />
 
         {/* Main Content Area */}
@@ -94,8 +93,6 @@ export function App() {
             onRequestIocOpen={() => setIsRequestIocOpen(true)}
             onLogout={handleLogout}
             currentUser={currentUser}
-            uniqueIocs={stats?.metrics.total_canonical_iocs ?? 0}
-            dedupRatio={stats?.metrics.deduplication_ratio_pct ?? 0}
           />
 
           {/* Scrollable Module Canvas (Full Width, Zero Horizontal Overflow) */}

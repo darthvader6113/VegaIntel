@@ -104,11 +104,11 @@ export const FeedMonitoringModule: React.FC = () => {
               <div className="space-y-1.5 font-mono text-xs pt-2 border-t border-slate-100">
                 <div className="flex justify-between text-slate-500">
                   <span>Total Ingested:</span>
-                  <span className="text-slate-900 font-bold">{feed.total_records_ingested.toLocaleString()}</span>
+                  <span className="text-slate-900 font-bold">{(feed.total_records_ingested ?? 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-slate-500">
                   <span>Unique Canonical:</span>
-                  <span className="text-orange-600 font-bold">{feed.unique_iocs_contributed.toLocaleString()}</span>
+                  <span className="text-orange-600 font-bold">{(feed.unique_iocs_contributed ?? 0).toLocaleString()}</span>
                 </div>
                 {feed.last_successful_sync && (
                   <div className="flex justify-between text-slate-400 text-[10px] pt-1 border-t border-slate-50">
@@ -149,10 +149,10 @@ export const FeedMonitoringModule: React.FC = () => {
                 <tr key={job.job_id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="py-2.5 px-4 text-slate-400 font-mono">{job.job_id.slice(0, 8)}...</td>
                   <td className="py-2.5 px-4 font-bold text-slate-900">{job.source}</td>
-                  <td className="py-2.5 px-4 text-slate-700">{job.records_processed.toLocaleString()}</td>
-                  <td className="py-2.5 px-4 text-orange-600 font-bold">{job.new_iocs_created.toLocaleString()}</td>
-                  <td className="py-2.5 px-4 text-slate-700">{job.sightings_added.toLocaleString()}</td>
-                  <td className="py-2.5 px-4 text-emerald-700 font-bold">{job.duplicates_prevented.toLocaleString()}</td>
+                  <td className="py-2.5 px-4 text-slate-700">{(job.records_processed ?? 0).toLocaleString()}</td>
+                  <td className="py-2.5 px-4 text-orange-600 font-bold">{(job.new_iocs_created ?? 0).toLocaleString()}</td>
+                  <td className="py-2.5 px-4 text-slate-700">{(job.sightings_added ?? 0).toLocaleString()}</td>
+                  <td className="py-2.5 px-4 text-emerald-700 font-bold">{(job.duplicates_prevented ?? 0).toLocaleString()}</td>
                   <td className="py-2.5 px-4 text-right">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       job.status === 'SUCCESS'

@@ -388,7 +388,7 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
                   <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="font-bold text-slate-900">{s.source}</span>
-                      <span className="text-slate-400">{new Date(s.observed_at).toLocaleString()}</span>
+                      <span className="text-slate-400">{s.observed_at ? new Date(s.observed_at).toLocaleString() : 'Recent'}</span>
                     </div>
                     {s.evidence_notes && (
                       <div className="text-slate-600 text-[11px] leading-relaxed">

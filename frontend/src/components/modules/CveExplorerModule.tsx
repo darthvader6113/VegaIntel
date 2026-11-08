@@ -170,7 +170,7 @@ export const CveExplorerModule: React.FC = () => {
                     {/* Severity Pill */}
                     <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badge.bg}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-                      {cve.severity} {cve.cvss_score.toFixed(1)}
+                      {cve.severity} {(cve.cvss_score ?? 0).toFixed(1)}
                     </span>
 
                     {/* CISA KEV Badge */}
@@ -256,8 +256,8 @@ export const CveExplorerModule: React.FC = () => {
                   <h3 className="text-xl font-bold font-mono text-slate-900 tracking-tight">
                     {selectedCveDetail.cve.cve_id}
                   </h3>
-                  <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border ${getSeverityBadge(selectedCveDetail.cve.severity, selectedCveDetail.cve.cvss_score).bg}`}>
-                    CVSS {selectedCveDetail.cve.cvss_score.toFixed(1)} ({selectedCveDetail.cve.severity})
+                  <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border ${getSeverityBadge(selectedCveDetail.cve?.severity || 'HIGH', selectedCveDetail.cve?.cvss_score ?? 0).bg}`}>
+                    CVSS {(selectedCveDetail.cve?.cvss_score ?? 0).toFixed(1)} ({selectedCveDetail.cve?.severity || 'HIGH'})
                   </span>
                   {selectedCveDetail.cve.severity === 'CRITICAL' && (
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200 font-bold flex items-center gap-1">
@@ -286,7 +286,7 @@ export const CveExplorerModule: React.FC = () => {
               <div className="p-1.5">
                 <div className="text-[10px] text-slate-400 uppercase">CVSS Score</div>
                 <div className="text-base font-bold text-slate-900 mt-0.5">
-                  {selectedCveDetail.cve.cvss_score.toFixed(1)} <span className="text-xs text-slate-400 font-normal">/ 10</span>
+                  {(selectedCveDetail.cve?.cvss_score ?? 0).toFixed(1)} <span className="text-xs text-slate-400 font-normal">/ 10</span>
                 </div>
               </div>
               <div className="p-1.5">
