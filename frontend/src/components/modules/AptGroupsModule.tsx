@@ -290,11 +290,12 @@ export const AptGroupsModule: React.FC = () => {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </Portal>
-  </div>
-  );
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </Portal>
+</div>
+);
 };
