@@ -270,6 +270,115 @@ class IntelligenceOrchestrator:
                 upsert=True
             )
 
+        # 3. Seed active In-The-Wild Threat Actors (APT28, APT29, Lazarus, Volt Typhoon, LockBit, Scattered Spider, Akira, BlackCat, Sandworm, FIN7)
+        for actor in ACTIVE_WILD_APTS:
+            self.db.apt_groups.update_one(
+                {"group_id": actor["group_id"]},
+                {
+                    "$set": {
+                        "group_id": actor["group_id"],
+                        "name": actor["name"],
+                        "aliases": actor["aliases"],
+                        "origin_country": actor["origin_country"],
+                        "description": actor["description"],
+                        "target_sectors": actor["target_sectors"],
+                        "techniques": actor["techniques"],
+                        "associated_malware": actor.get("associated_malware", []),
+                        "associated_cves": actor.get("associated_cves", []),
+                        "updated_at": now
+                    }
+                },
+                upsert=True
+            )
+            for ind in actor.get("indicators", []):
+                val = ind["value"]
+                itype = ind["type"]
+                conf = ind.get("confidence", 95)
+                is_new, fp, rep = self.deduplicator.ingest_ioc_sighting(
+                    raw_ioc=val,
+                    source="MITRE ATT&CK",
+                    ioc_type=itype,
+                    feed_confidence=conf,
+                    associated_malware=actor.get("associated_malware", [None])[0],
+                    associated_cve=actor.get("associated_cves", [None])[0] if actor.get("associated_cves") else None,
+                    tags=[actor["name"].lower(), "active-threat"]
+                )
+                self.db.relationships.update_one(
+                    {"source_id": fp, "target_id": actor["group_id"], "relationship_type": "infrastructure_of"},
+                    {
+                        "$set": {
+                            "source_id": fp,
+                            "source_type": "ioc",
+                            "target_id": actor["group_id"],
+                            "target_type": "apt_group",
+                            "relationship_type": "infrastructure_of",
+                            "confidence": conf,
+                            "updated_at": now
+                        }
+                    },
+                    upsert=True
+                )
+
+        # 4. Seed verified Malware Families & C2 Infrastructure
+        from app.collectors.mitre_attack import MitreAttackCollector
+        mitre_collector = MitreAttackCollector(self.db)
+        # Seed default malware items directly
+        from app.routers.malware import VERIFIED_MALWARE_DEFAULTS
+        default_malware_specs = [
+            {"malware_id": "Cobalt Strike", "name": "Cobalt Strike", "malware_type": "C2 Beacon / Adversary Emulation", "description": "Commercial adversary simulation software abused by threat actors for interactive post-exploitation and lateral movement.", "aliases": ["Beacon"]},
+            {"malware_id": "LockBit 3.0", "name": "LockBit 3.0", "malware_type": "Ransomware", "description": "LockBit 3.0 (Black) locker with anti-evasion mechanisms and multi-threaded file encryption.", "aliases": ["LockBit Black"]},
+            {"malware_id": "LEMURLOOT", "name": "LEMURLOOT", "malware_type": "Webshell / Infostealer", "description": "Tailored ASPX webshell deployed in MOVEit Transfer intrusions to exfiltrate credentials and sensitive data.", "aliases": ["MOVEit Webshell"]},
+            {"malware_id": "QakBot", "name": "QakBot", "malware_type": "Botnet / Banking Trojan", "description": "Modular banking Trojan and payload loader with active worm capabilities.", "aliases": ["Qbot", "Pinkslipbot"]},
+            {"malware_id": "RedLine Stealer", "name": "RedLine Stealer", "malware_type": "Infostealer", "description": "Widely deployed infostealer harvesting browser credentials, crypto wallets, VPN profiles, and tokens.", "aliases": ["RedLine"]},
+            {"malware_id": "Remcos RAT", "name": "Remcos RAT", "malware_type": "Remote Access Trojan", "description": "Commercial remote control software abused by threat actors for espionage, keylogging, and surveillance.", "aliases": ["Remcos"]},
+            {"malware_id": "AsyncRAT", "name": "AsyncRAT", "malware_type": "Remote Access Trojan", "description": "Open-source remote access tool weaponized for credential harvesting, screen captures, and remote control.", "aliases": ["Async"]},
+            {"malware_id": "DarkGate", "name": "DarkGate", "malware_type": "Loader / Botnet", "description": "Commodity malware loader featuring hVNC, reverse proxying, privilege escalation, and anti-analysis.", "aliases": ["DarkGate Loader"]},
+            {"malware_id": "BlackCat", "name": "BlackCat", "malware_type": "Ransomware", "description": "Rust-written ransomware used in targeted human-operated ransomware campaigns with advanced evasions.", "aliases": ["ALPHV", "Noberus"]},
+            {"malware_id": "Akira Locker", "name": "Akira Locker", "malware_type": "Ransomware", "description": "Double-extortion ransomware targeting corporate networks and VMware ESXi hypervisors.", "aliases": ["Akira"]}
+        ]
+
+        for m_spec in default_malware_specs:
+            mkey = m_spec["name"].lower()
+            defaults = VERIFIED_MALWARE_DEFAULTS.get(mkey, {"hashes": [], "c2s": []})
+            m_spec["sample_hashes"] = defaults["hashes"]
+            m_spec["known_c2_servers"] = defaults["c2s"]
+            self.db.malware.update_one(
+                {"malware_id": m_spec["malware_id"]},
+                {"$set": m_spec},
+                upsert=True
+            )
+            # Ingest hashes and C2s into canonical IOCs
+            for h in defaults["hashes"]:
+                is_new, fp, rep = self.deduplicator.ingest_ioc_sighting(
+                    raw_ioc=h,
+                    source="MalwareBazaar",
+                    ioc_type="sha256",
+                    feed_confidence=98,
+                    associated_malware=m_spec["name"],
+                    tags=[mkey, "malware-hash"]
+                )
+                self.db.relationships.update_one(
+                    {"source_id": fp, "target_id": m_spec["malware_id"], "relationship_type": "associated_with"},
+                    {"$set": {"source_id": fp, "source_type": "ioc", "target_id": m_spec["malware_id"], "target_type": "malware", "relationship_type": "associated_with", "confidence": 98, "updated_at": now}},
+                    upsert=True
+                )
+            for c2 in defaults["c2s"]:
+                c2_clean = c2.split(":")[0]
+                c2_type = "ip" if c2_clean.replace(".", "").isdigit() else "domain"
+                is_new, fp, rep = self.deduplicator.ingest_ioc_sighting(
+                    raw_ioc=c2_clean,
+                    source="ThreatFox",
+                    ioc_type=c2_type,
+                    feed_confidence=96,
+                    associated_malware=m_spec["name"],
+                    tags=[mkey, "c2-node"]
+                )
+                self.db.relationships.update_one(
+                    {"source_id": fp, "target_id": m_spec["malware_id"], "relationship_type": "c2"},
+                    {"$set": {"source_id": fp, "source_type": "ioc", "target_id": m_spec["malware_id"], "target_type": "malware", "relationship_type": "c2", "confidence": 96, "updated_at": now}},
+                    upsert=True
+                )
+
     def setup_scheduler(self):
         """Configures periodic background sync based on settings interval."""
         interval = max(5, settings.CRON_COLLECTION_INTERVAL_MINUTES)

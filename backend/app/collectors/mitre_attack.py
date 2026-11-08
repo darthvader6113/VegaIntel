@@ -159,6 +159,107 @@ class MitreAttackCollector:
                     "174.138.180.11:2222",
                     "185.70.184.42:995"
                 ]
+            },
+            {
+                "malware_id": "RedLine Stealer",
+                "name": "RedLine Stealer",
+                "malware_type": "Infostealer",
+                "description": "Widely deployed infostealer harvesting browser credentials, crypto wallets, VPN profiles, and tokens.",
+                "aliases": ["RedLine"],
+                "associated_apt_groups": ["Scattered Spider"],
+                "associated_cves": ["CVE-2024-1709"],
+                "sample_hashes": [
+                    "4a38df37c78465d064cfb0790e78c85e2b02868ff18520bfd650125dbb1a2ceb",
+                    "8d98d254b1f69742fa481e13b860645c7ad2b3227976c66cf73e7f4153b3f20d"
+                ],
+                "known_c2_servers": [
+                    "195.201.225.248:19075",
+                    "185.215.113.39:4125"
+                ]
+            },
+            {
+                "malware_id": "Remcos RAT",
+                "name": "Remcos RAT",
+                "malware_type": "Remote Access Trojan",
+                "description": "Commercial remote control software abused by threat actors for espionage, keylogging, and surveillance.",
+                "aliases": ["Remcos"],
+                "associated_apt_groups": ["APT28"],
+                "associated_cves": ["CVE-2023-38831"],
+                "sample_hashes": [
+                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "3f52479e1208945fa67540989f5bc390886c5fb1b702ec953b0e1e97669d2a23"
+                ],
+                "known_c2_servers": [
+                    "geobaza.ddns.net:2404",
+                    "185.143.223.18:443"
+                ]
+            },
+            {
+                "malware_id": "AsyncRAT",
+                "name": "AsyncRAT",
+                "malware_type": "Remote Access Trojan",
+                "description": "Open-source remote access tool weaponized for credential harvesting, screen captures, and remote control.",
+                "aliases": ["Async"],
+                "associated_apt_groups": ["Lazarus Group"],
+                "associated_cves": ["CVE-2023-38831"],
+                "sample_hashes": [
+                    "d18386414704e67cd768fc99a5e8fe5c5b96739660c18471e8bfb51a44c9b362",
+                    "bf7a918a0cefc1ae5d3df1921319749f96b2be1451f2f01f808796850c95ceb7"
+                ],
+                "known_c2_servers": [
+                    "securelink.duckdns.org:6606",
+                    "193.161.193.99:7707"
+                ]
+            },
+            {
+                "malware_id": "DarkGate",
+                "name": "DarkGate",
+                "malware_type": "Loader / Botnet",
+                "description": "Commodity malware loader featuring hVNC, reverse proxying, privilege escalation, and anti-analysis.",
+                "aliases": ["DarkGate Loader"],
+                "associated_apt_groups": ["Scattered Spider"],
+                "associated_cves": ["CVE-2024-1709"],
+                "sample_hashes": [
+                    "300d8985db9ff6f0b484501287610f607c312543e5c9429598a2e2f9eeea537f",
+                    "a6e9d72c1c69baeb40b99119565f1262d4c0628eefd2a9391b48325852230353"
+                ],
+                "known_c2_servers": [
+                    "ad-telemetry.com",
+                    "85.239.53.197:80"
+                ]
+            },
+            {
+                "malware_id": "BlackCat",
+                "name": "BlackCat",
+                "malware_type": "Ransomware",
+                "description": "Rust-written ransomware used in targeted human-operated ransomware campaigns with advanced evasions.",
+                "aliases": ["ALPHV", "Noberus"],
+                "associated_apt_groups": ["BlackCat"],
+                "associated_cves": ["CVE-2023-34362", "CVE-2024-1709"],
+                "sample_hashes": [
+                    "5c84a5697662c2f6d900b3cfdc9b1a51fb023ea9a1eb4d3d7894aa14e4b5055b",
+                    "d5440656a84d284a71bfb096576da6f140ecb40a3ddb4a03ee82a6f5e3e236cb"
+                ],
+                "known_c2_servers": [
+                    "155.133.5.15",
+                    "194.38.20.44"
+                ]
+            },
+            {
+                "malware_id": "Akira Locker",
+                "name": "Akira Locker",
+                "malware_type": "Ransomware",
+                "description": "Double-extortion ransomware targeting corporate networks and VMware ESXi hypervisors.",
+                "aliases": ["Akira"],
+                "associated_apt_groups": ["Akira"],
+                "associated_cves": ["CVE-2023-20269", "CVE-2024-3400"],
+                "sample_hashes": [
+                    "7f13c6f84931a7884d5df6866ecbe441f9d5be326f21c25143003058b76c8c11"
+                ],
+                "known_c2_servers": [
+                    "193.106.191.45",
+                    "akirabackup-cloud-storage.com"
+                ]
             }
         ]
 

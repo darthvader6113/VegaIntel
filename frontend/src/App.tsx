@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sidebar, TabType } from './components/layout/Sidebar';
+import { Sidebar, TabType, FilterState } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { OverviewModule } from './components/modules/OverviewModule';
 import { ReactFlowDetectionsModule } from './components/modules/ReactFlowDetectionsModule';
@@ -23,7 +23,15 @@ export function App() {
   const [stats, setStats] = useState<OverviewStats | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRequestIocOpen, setIsRequestIocOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isNestedOpen, setIsNestedOpen] = useState(true);
+  const [filters, setFilters] = useState<FilterState>({
+    searchQuery: '',
+    severity: 'ALL',
+    hasPoc: null,
+    iocType: 'ALL',
+    actorRegion: 'ALL',
+    minConfidence: 0
+  });
 
   // Check existing session
   useEffect(() => {
@@ -78,12 +86,14 @@ export function App() {
   return (
     <ErrorBoundary fallbackTitle="VegaIntel Dashboard Shell">
       <div className="flex h-screen w-screen overflow-hidden bg-[#f8fafc] text-slate-800 font-sans antialiased">
-        {/* Fixed Enterprise Sidebar */}
+        {/* Fixed Enterprise Nested Sidebar with Filtering */}
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+          filters={filters}
+          setFilters={setFilters}
+          isNestedOpen={isNestedOpen}
+          setIsNestedOpen={setIsNestedOpen}
         />
 
         {/* Main Content Area */}
@@ -117,16 +127,16 @@ export function App() {
                     <ReactFlowDetectionsModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
                   )}
                   {activeTab === 'cves' && (
-                    <CveExplorerModule />
+                    <CveExplorerModule filters={filters} />
                   )}
                   {activeTab === 'iocs' && (
-                    <IocRepositoryModule onRequestIocOpen={() => setIsRequestIocOpen(true)} />
+                    <IocRepositoryModule onRequestIocOpen={() => setIsRequestIocOpen(true)} filters={filters} />
                   )}
                   {activeTab === 'apt' && (
-                    <AptGroupsModule />
+                    <AptGroupsModule filters={filters} />
                   )}
                   {activeTab === 'malware' && (
-                    <MalwareModule />
+                    <MalwareModule filters={filters} />
                   )}
                   {activeTab === 'pocs' && (
                     <PocLibraryModule />

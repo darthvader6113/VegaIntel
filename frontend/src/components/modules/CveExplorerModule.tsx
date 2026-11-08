@@ -18,8 +18,14 @@ import {
 } from 'lucide-react';
 import { CVE } from '../../types';
 import { api } from '../../services/api';
+import { copyToClipboard } from '../../utils/clipboard';
+import { FilterState } from '../layout/Sidebar';
 
-export const CveExplorerModule: React.FC = () => {
+interface CveExplorerModuleProps {
+  filters?: FilterState;
+}
+
+export const CveExplorerModule: React.FC<CveExplorerModuleProps> = ({ filters }) => {
   const [cves, setCves] = useState<CVE[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSeverity, setSelectedSeverity] = useState<string>('');
@@ -29,13 +35,17 @@ export const CveExplorerModule: React.FC = () => {
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const activeSearch = filters?.searchQuery || searchTerm;
+  const activeSeverity = (filters?.severity && filters.severity !== 'ALL') ? filters.severity : selectedSeverity;
+  const activePoc = filters?.hasPoc !== null && filters?.hasPoc !== undefined ? filters.hasPoc : onlyPoc;
+
   const fetchCves = async () => {
     try {
       setLoading(true);
       const res = await api.getCVEs({
-        q: searchTerm || undefined,
-        severity: selectedSeverity || undefined,
-        has_poc: onlyPoc ? true : undefined,
+        q: activeSearch || undefined,
+        severity: activeSeverity || undefined,
+        has_poc: activePoc ? true : undefined,
       });
       setCves(res.items);
     } catch (e) {
@@ -47,7 +57,7 @@ export const CveExplorerModule: React.FC = () => {
 
   useEffect(() => {
     fetchCves();
-  }, [searchTerm, selectedSeverity, onlyPoc]);
+  }, [activeSearch, activeSeverity, activePoc]);
 
   const openDetail = async (cveId: string) => {
     try {
@@ -59,10 +69,12 @@ export const CveExplorerModule: React.FC = () => {
     }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(label);
-    setTimeout(() => setCopiedText(null), 2000);
+  const handleCopy = async (text: string, label: string) => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopiedText(label);
+      setTimeout(() => setCopiedText(null), 2000);
+    }
   };
 
   const getSeverityBadge = (severity: string, score: number) => {
@@ -160,17 +172,17 @@ export const CveExplorerModule: React.FC = () => {
               <div
                 key={cve.cve_id}
                 onClick={() => openDetail(cve.cve_id)}
-                className={`p-5 rounded-xl border border-slate-200/90 bg-white hover:border-orange-300/80 hover:shadow-md cursor-pointer transition-all border-l-4 ${badge.borderAccent} flex flex-col justify-between gap-3 group`}
+                className="p-4 rounded-lg border border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs cursor-pointer transition-all flex flex-col justify-between gap-3 group"
               >
                 {/* Header row: ID, Badges, Dates */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-sm font-bold text-slate-900 group-hover:text-orange-600 transition-colors">
                       {cve.cve_id}
                     </span>
 
-                    {/* Severity Pill */}
-                    <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badge.bg}`}>
+                    {/* Clean Severity Chip (No AI stripe) */}
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border flex items-center gap-1 ${badge.bg}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
                       {cve.severity} {(cve.cvss_score ?? 0).toFixed(1)}
                     </span>
@@ -178,7 +190,7 @@ export const CveExplorerModule: React.FC = () => {
                     {/* Active In The Wild Badge */}
                     {cve.severity === 'CRITICAL' && (
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1 font-semibold">
-                        <Flame className="w-3 h-3 text-rose-600" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                         ACTIVELY EXPLOITED
                       </span>
                     )}
@@ -187,17 +199,17 @@ export const CveExplorerModule: React.FC = () => {
                     {cve.has_poc && (
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1 font-semibold">
                         <Code2 className="w-3 h-3 text-amber-600" />
-                        Weaponized PoC
+                        PoC Verified
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyToClipboard(cve.cve_id, cve.cve_id);
+                        handleCopy(cve.cve_id, cve.cve_id);
                       }}
                       title="Copy CVE ID"
                       className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
@@ -208,29 +220,29 @@ export const CveExplorerModule: React.FC = () => {
                         <Copy className="w-3.5 h-3.5" />
                       )}
                     </button>
-                    <span className="text-xs font-mono text-slate-500 group-hover:text-orange-600 font-semibold flex items-center gap-1 transition-colors">
-                      Dossier <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    <span className="text-xs font-mono text-slate-400 group-hover:text-orange-600 font-semibold flex items-center gap-0.5 transition-colors">
+                      Dossier <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                     </span>
                   </div>
                 </div>
 
                 {/* Vulnerability Description (2-line clamp) */}
-                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 font-sans">
                   {cve.description}
                 </p>
 
                 {/* Bottom Metadata Badges */}
                 <div className="flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-500 pt-2 border-t border-slate-100 gap-2">
-                  <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-3 flex-wrap">
                     {cve.associated_ioc_count > 0 && (
-                      <span className="flex items-center gap-1 text-slate-700 font-medium">
-                        <Database className="w-3.5 h-3.5 text-orange-600" />
-                        {cve.associated_ioc_count} Correlated Canonical IOCs
+                      <span className="flex items-center gap-1 text-slate-700 font-medium text-[10px]">
+                        <Database className="w-3 h-3 text-orange-600" />
+                        {cve.associated_ioc_count} IOCs
                       </span>
                     )}
                     {cve.cwe_ids && cve.cwe_ids.length > 0 && (
-                      <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px]">
-                        {cve.cwe_ids.join(', ')}
+                      <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] border border-slate-200">
+                        {cve.cwe_ids[0]}
                       </span>
                     )}
                   </div>
@@ -465,7 +477,7 @@ export const CveExplorerModule: React.FC = () => {
                             </span>
                             <button
                               type="button"
-                              onClick={() => copyToClipboard(ioc.ioc_value, ioc.fingerprint)}
+                              onClick={() => handleCopy(ioc.ioc_value, ioc.fingerprint)}
                               className="p-1 text-slate-400 hover:text-slate-800"
                               title="Copy indicator"
                             >
@@ -528,7 +540,7 @@ export const CveExplorerModule: React.FC = () => {
                     <span className="text-slate-500 text-[11px]">OASIS STIX 2.1 Vulnerability Object:</span>
                     <button
                       type="button"
-                      onClick={() => copyToClipboard(JSON.stringify(selectedCveDetail, null, 2), 'stix-json')}
+                      onClick={() => handleCopy(JSON.stringify(selectedCveDetail, null, 2), 'stix-json')}
                       className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
                     >
                       {copiedText === 'stix-json' ? (

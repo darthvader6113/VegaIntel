@@ -191,9 +191,10 @@ export const api = {
   },
 
   // APT & Malware & PoCs
-  async getAPTGroups(params?: { q?: string }): Promise<{ total: number; items: APTGroup[] }> {
+  async getAPTGroups(params?: { q?: string; country?: string }): Promise<{ total: number; items: APTGroup[] }> {
     const query = new URLSearchParams();
     if (params?.q) query.append('q', params.q);
+    if (params?.country) query.append('country', params.country);
     const res = await fetch(`${API_BASE}/apt/?${query.toString()}`, {
       headers: { ...getAuthHeader() },
     });

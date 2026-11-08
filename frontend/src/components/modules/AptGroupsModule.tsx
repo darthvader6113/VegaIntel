@@ -5,19 +5,30 @@ import { Portal } from '../common/Portal';
 import { APTGroup } from '../../types';
 import { api } from '../../services/api';
 import { copyToClipboard } from '../../utils/clipboard';
+import { FilterState } from '../layout/Sidebar';
 
-export const AptGroupsModule: React.FC = () => {
+interface AptGroupsModuleProps {
+  filters?: FilterState;
+}
+
+export const AptGroupsModule: React.FC<AptGroupsModuleProps> = ({ filters }) => {
   const [groups, setGroups] = useState<APTGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const activeSearch = filters?.searchQuery || searchTerm;
+  const activeRegion = (filters?.actorRegion && filters.actorRegion !== 'ALL') ? filters.actorRegion : undefined;
+
   useEffect(() => {
     const fetchGroups = async () => {
       try {
         setLoading(true);
-        const res = await api.getAPTGroups({ q: searchTerm || undefined });
+        const res = await api.getAPTGroups({
+          q: activeSearch || undefined,
+          country: activeRegion || undefined
+        });
         setGroups(res.items);
       } catch (e) {
         console.error(e);
@@ -26,7 +37,7 @@ export const AptGroupsModule: React.FC = () => {
       }
     };
     fetchGroups();
-  }, [searchTerm]);
+  }, [activeSearch, activeRegion]);
 
   const openGroup = async (groupId: string) => {
     try {

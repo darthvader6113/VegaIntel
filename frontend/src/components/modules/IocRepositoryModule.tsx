@@ -18,12 +18,14 @@ import {
 import { IOC } from '../../types';
 import { api } from '../../services/api';
 import { copyToClipboard } from '../../utils/clipboard';
+import { FilterState } from '../layout/Sidebar';
 
 interface IocRepositoryModuleProps {
   onRequestIocOpen?: () => void;
+  filters?: FilterState;
 }
 
-export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequestIocOpen }) => {
+export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequestIocOpen, filters }) => {
   const [iocs, setIocs] = useState<IOC[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('');
@@ -34,15 +36,19 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const activeSearch = filters?.searchQuery || searchTerm;
+  const activeType = (filters?.iocType && filters.iocType !== 'ALL') ? filters.iocType : selectedType;
+  const activeConfidence = (filters?.minConfidence && filters.minConfidence > 0) ? filters.minConfidence : minConfidence;
+
   const fetchIocs = async () => {
     try {
       setLoading(true);
       const res = await api.getIOCs({
-        q: searchTerm || undefined,
-        ioc_type: selectedType || undefined,
+        q: activeSearch || undefined,
+        ioc_type: activeType || undefined,
         source: selectedSource || undefined,
         time_range: timeRange !== 'all' ? timeRange : undefined,
-        min_confidence: minConfidence > 0 ? minConfidence : undefined,
+        min_confidence: activeConfidence > 0 ? activeConfidence : undefined,
       });
       setIocs(res.items);
     } catch (e) {
@@ -54,7 +60,7 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
 
   useEffect(() => {
     fetchIocs();
-  }, [searchTerm, selectedType, selectedSource, timeRange, minConfidence]);
+  }, [activeSearch, activeType, selectedSource, timeRange, activeConfidence]);
 
   const openDetail = async (fingerprint: string) => {
     try {
