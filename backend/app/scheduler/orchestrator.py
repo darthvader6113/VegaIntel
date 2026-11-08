@@ -8,7 +8,9 @@ Executes the live OSINT collection and deduplication pipeline across verified fe
 """
 import asyncio
 from datetime import datetime, timezone
+import hashlib
 import logging
+import re
 from typing import Any, Dict, List
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -262,8 +264,97 @@ class IntelligenceOrchestrator:
                 upsert=True
             )
 
-        # 2. Seed verified CVEs
+        # 2. Seed verified CVEs and their Correlated Threat Indicators & PoCs
         for cid, info in KNOWN_CVE_INTEL.items():
+            ioc_list = info.get("iocs", [])
+            for item in ioc_list:
+                raw_val = item.get("value")
+                itype = item.get("type")
+                conf = item.get("confidence", 95)
+                src = item.get("source", "ThreatFox")
+                notes = item.get("notes", f"Correlated C2 indicator for {cid}")
+                is_new, fp, rep = self.deduplicator.ingest_ioc_sighting(
+                    raw_ioc=raw_val,
+                    source=src,
+                    ioc_type=itype,
+                    feed_confidence=conf,
+                    associated_cve=cid,
+                    threat_types=["exploit_delivery", "c2_infrastructure"],
+                    tags=[cid, "cve-correlated", "active-threat"],
+                    evidence_notes=notes,
+                    observed_at=now
+                )
+                self.db.relationships.update_one(
+                    {"source_id": fp, "target_id": cid, "relationship_type": "associated_with"},
+                    {
+                        "$set": {
+                            "source_id": fp,
+                            "source_type": "ioc",
+                            "target_id": cid,
+                            "target_type": "cve",
+                            "relationship_type": "associated_with",
+                            "confidence": conf,
+                            "updated_at": now
+                        }
+                    },
+                    upsert=True
+                )
+
+            # Ingest PoCs
+            for p in info.get("pocs", []):
+                p_url = p.get("url", "")
+                poc_id = f"poc-{cid.lower()}-{hashlib.md5(p_url.encode()).hexdigest()[:6]}"
+                poc_doc = {
+                    "poc_id": poc_id,
+                    "cve_id": cid,
+                    "title": p.get("title", f"{cid} Exploit PoC"),
+                    "source": p.get("source", "GitHub"),
+                    "author": p.get("author", "Security Community"),
+                    "url": p_url,
+                    "reliability": "VERIFIED_POC",
+                    "description": f"Verified weaponized exploit reference for {cid}.",
+                    "discovered_date": now.strftime("%Y-%m-%dT%H:%M:%SZ")
+                }
+                self.db.pocs.update_one({"poc_id": poc_id}, {"$set": poc_doc}, upsert=True)
+                self.db.poc_references.update_one({"poc_id": poc_id}, {"$set": poc_doc}, upsert=True)
+
+            # Link CVE to exploiting Threat Actors
+            for actor_name in info.get("apt_groups", []):
+                self.db.relationships.update_one(
+                    {"source_id": actor_name, "target_id": cid, "relationship_type": "exploits"},
+                    {
+                        "$set": {
+                            "source_id": actor_name,
+                            "source_type": "apt_group",
+                            "target_id": cid,
+                            "target_type": "cve",
+                            "relationship_type": "exploits",
+                            "confidence": 95,
+                            "updated_at": now
+                        }
+                    },
+                    upsert=True
+                )
+
+            # Link CVE to delivering Malware
+            for mal_name in info.get("malware", []):
+                self.db.relationships.update_one(
+                    {"source_id": mal_name, "target_id": cid, "relationship_type": "delivers"},
+                    {
+                        "$set": {
+                            "source_id": mal_name,
+                            "source_type": "malware",
+                            "target_id": cid,
+                            "target_type": "cve",
+                            "relationship_type": "delivers",
+                            "confidence": 95,
+                            "updated_at": now
+                        }
+                    },
+                    upsert=True
+                )
+
+            total_associated = self.db.iocs.count_documents({"associated_cves": cid})
             self.db.cves.update_one(
                 {"cve_id": cid},
                 {
@@ -274,7 +365,7 @@ class IntelligenceOrchestrator:
                         "cvss_vector": info.get("cvss_vector"),
                         "severity": info.get("severity", "CRITICAL"),
                         "has_poc": True,
-                        "associated_ioc_count": max(len(info.get("iocs", [])), 2),
+                        "associated_ioc_count": max(total_associated, len(ioc_list)),
                         "published_date": "2024-04-10T00:00:00Z"
                     }
                 },

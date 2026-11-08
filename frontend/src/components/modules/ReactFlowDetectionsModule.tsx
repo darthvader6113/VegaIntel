@@ -211,7 +211,15 @@ export const ReactFlowDetectionsModule: React.FC<ReactFlowDetectionsModuleProps>
       });
 
       // 4. Observed IOCs (Lane 4 in clean 2-column compact layout)
-      const displayIocs = iocRes.items.slice(0, 10);
+      let displayIocs = iocRes.items.slice(0, 10);
+      if (displayIocs.length === 0) {
+        try {
+          const fallbackRes = await api.getIOCs({ limit: 10 });
+          displayIocs = (fallbackRes.items || []).slice(0, 10);
+        } catch {
+          // ignore fallback error
+        }
+      }
       displayIocs.forEach((ioc: any, i: number) => {
         const col = i % 2;
         const row = Math.floor(i / 2);
