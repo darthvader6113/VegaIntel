@@ -84,13 +84,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleDemoLogin = () => {
-    setEmail('analyst@vegaintel.io');
-    setPassword('VegaIntel2026!');
-    setIsRegister(false);
-    setErrorMsg(null);
-  };
-
   return (
     <div className="min-h-screen w-screen flex items-center justify-center p-6 bg-[#f8fafc] text-slate-800 font-sans relative overflow-hidden select-none">
       {/* Abstract Geometric SVG Background (No Shadows, Crisp Clean Enterprise) */}
@@ -263,16 +256,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             <span>{loading ? 'Processing...' : isRegister ? 'Create Account' : 'Authenticate'}</span>
             {!loading && <ArrowRight className="w-4 h-4" />}
           </button>
-
-          {!isRegister && (
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              className="w-full py-2 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-[11px] font-mono text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center gap-1.5"
-            >
-              <span>Auto-Fill Demo Analyst Credentials</span>
-            </button>
-          )}
         </form>
 
         {/* Security Notice */}
