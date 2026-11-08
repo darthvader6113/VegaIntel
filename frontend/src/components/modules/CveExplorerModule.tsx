@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Portal } from '../common/Portal';
 import {
   Search,
   ExternalLink,
@@ -152,7 +153,7 @@ export const CveExplorerModule: React.FC = () => {
           No vulnerabilities match the current filter criteria.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {cves.map((cve) => {
             const badge = getSeverityBadge(cve.severity, cve.cvss_score);
             return (
@@ -247,14 +248,15 @@ export const CveExplorerModule: React.FC = () => {
       )}
 
       {/* Enterprise CVE Detailed Dossier Modal */}
-      <AnimatePresence>
-        {selectedCveDetail && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
-          >
+      <Portal>
+        <AnimatePresence>
+          {selectedCveDetail && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+            >
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -573,6 +575,7 @@ export const CveExplorerModule: React.FC = () => {
         </motion.div>
       )}
     </AnimatePresence>
-  </div>
-  );
+  </Portal>
+</div>
+);
 };

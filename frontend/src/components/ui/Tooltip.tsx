@@ -28,3 +28,4 @@ export const Tooltip: React.FC<TooltipProps> = ({
     </ArkTooltip.Root>
   );
 };
+

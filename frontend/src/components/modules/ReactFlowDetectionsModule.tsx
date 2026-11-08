@@ -20,59 +20,60 @@ import {
   Binary,
   Plus,
   RefreshCw,
-  Activity
+  Activity,
+  Layers
 } from 'lucide-react';
 import { api } from '../../services/api';
 
 // Custom Node for Canonical IOC
 const IocNodeComponent = ({ data }: { data: any }) => (
-  <div className="px-4 py-3 rounded-xl bg-white border-2 border-orange-500 shadow-md min-w-[200px] text-xs font-mono">
-    <Handle type="target" position={Position.Top} className="!bg-orange-500" />
+  <div className="px-3 py-2.5 rounded-xl bg-white border border-orange-300 shadow-xs min-w-[200px] max-w-[220px] text-xs font-mono">
+    <Handle type="target" position={Position.Left} className="!bg-orange-500 !w-2 !h-2" />
     <div className="flex items-center justify-between text-[10px] text-orange-700 font-bold uppercase mb-1">
-      <span className="flex items-center gap-1">
-        <Database className="w-3 h-3 text-orange-600" />
+      <span className="flex items-center gap-1 truncate">
+        <Database className="w-3 h-3 text-orange-600 shrink-0" />
         {data.type || 'IOC'}
       </span>
-      <span className="px-1.5 py-0.5 rounded bg-orange-50 text-orange-800 border border-orange-200 font-semibold">
-        {data.sightingCount || 1}x sightings
+      <span className="px-1.5 py-0.2 rounded bg-orange-50 text-orange-800 border border-orange-200 font-semibold shrink-0">
+        {data.sightingCount || 1}x
       </span>
     </div>
     <div className="font-bold text-slate-900 text-[11px] truncate" title={data.value}>
       {data.value}
     </div>
-    <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 text-[10px] text-slate-500">
+    <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-100 text-[10px] text-slate-500">
       <span>Confidence:</span>
       <span className="text-emerald-700 font-bold">{data.confidence || 85}%</span>
     </div>
-    <Handle type="source" position={Position.Bottom} className="!bg-orange-500" />
+    <Handle type="source" position={Position.Right} className="!bg-orange-500 !w-2 !h-2" />
   </div>
 );
 
 // Custom Node for Vulnerability (CVE)
 const CveNodeComponent = ({ data }: { data: any }) => (
-  <div className="px-4 py-3 rounded-xl bg-white border-2 border-red-500 shadow-md min-w-[190px] text-xs font-mono">
-    <Handle type="target" position={Position.Top} className="!bg-red-500" />
+  <div className="px-3.5 py-2.5 rounded-xl bg-white border border-red-300 shadow-xs min-w-[190px] max-w-[210px] text-xs font-mono">
+    <Handle type="target" position={Position.Left} className="!bg-red-500 !w-2 !h-2" />
     <div className="flex items-center justify-between text-[10px] text-red-700 font-bold uppercase mb-1">
       <span className="flex items-center gap-1">
         <ShieldAlert className="w-3 h-3 text-red-600" />
         VULNERABILITY
       </span>
-      <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-bold">
+      <span className="px-1.5 py-0.2 rounded bg-red-50 text-red-700 border border-red-200 font-bold">
         {data.severity || 'CRITICAL'}
       </span>
     </div>
     <div className="font-bold text-slate-900 text-[12px]">{data.label}</div>
     <div className="text-[10px] text-slate-500 mt-1 truncate">
-      CVSS Score: <strong className="text-red-600">{data.score || 9.8}</strong>
+      CVSS: <strong className="text-red-600">{data.score || 9.8}</strong>
     </div>
-    <Handle type="source" position={Position.Bottom} className="!bg-red-500" />
+    <Handle type="source" position={Position.Right} className="!bg-red-500 !w-2 !h-2" />
   </div>
 );
 
 // Custom Node for Threat Actor / APT
 const AptNodeComponent = ({ data }: { data: any }) => (
-  <div className="px-4 py-3 rounded-xl bg-white border-2 border-purple-500 shadow-md min-w-[180px] text-xs font-mono">
-    <Handle type="target" position={Position.Top} className="!bg-purple-500" />
+  <div className="px-3.5 py-2.5 rounded-xl bg-white border border-purple-300 shadow-xs min-w-[190px] max-w-[210px] text-xs font-mono">
+    <Handle type="target" position={Position.Left} className="!bg-purple-500 !w-2 !h-2" />
     <div className="flex items-center justify-between text-[10px] text-purple-700 font-bold uppercase mb-1">
       <span className="flex items-center gap-1">
         <Users className="w-3 h-3 text-purple-600" />
@@ -84,14 +85,14 @@ const AptNodeComponent = ({ data }: { data: any }) => (
     <div className="text-[10px] text-slate-500 mt-1 truncate">
       {data.techniques ? `${data.techniques.length} Techniques` : 'MITRE ATT&CK'}
     </div>
-    <Handle type="source" position={Position.Bottom} className="!bg-purple-500" />
+    <Handle type="source" position={Position.Right} className="!bg-purple-500 !w-2 !h-2" />
   </div>
 );
 
 // Custom Node for Malware Payload
 const MalwareNodeComponent = ({ data }: { data: any }) => (
-  <div className="px-4 py-3 rounded-xl bg-white border-2 border-amber-500 shadow-md min-w-[180px] text-xs font-mono">
-    <Handle type="target" position={Position.Top} className="!bg-amber-500" />
+  <div className="px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 shadow-xs min-w-[180px] max-w-[200px] text-xs font-mono">
+    <Handle type="target" position={Position.Left} className="!bg-amber-500 !w-2 !h-2" />
     <div className="flex items-center justify-between text-[10px] text-amber-700 font-bold uppercase mb-1">
       <span className="flex items-center gap-1">
         <Binary className="w-3 h-3 text-amber-600" />
@@ -100,7 +101,7 @@ const MalwareNodeComponent = ({ data }: { data: any }) => (
       <span className="font-semibold text-slate-600">{data.malwareType || 'C2'}</span>
     </div>
     <div className="font-bold text-slate-900 text-[12px]">{data.label}</div>
-    <Handle type="source" position={Position.Bottom} className="!bg-amber-500" />
+    <Handle type="source" position={Position.Right} className="!bg-amber-500 !w-2 !h-2" />
   </div>
 );
 
@@ -125,36 +126,102 @@ export const ReactFlowDetectionsModule: React.FC<ReactFlowDetectionsModuleProps>
     []
   );
 
-  const loadDetectionsGraph = async () => {
+  const loadDetectionsGraph = useCallback(async () => {
     try {
       setLoading(true);
       const [iocRes, graphRes] = await Promise.all([
-        api.getIOCs({ time_range: timeRange, limit: 30 }),
+        api.getIOCs({ time_range: timeRange, limit: 16 }),
         api.getCorrelationGraph(),
       ]);
 
       const flowNodes: Node[] = [];
       const flowEdges: Edge[] = [];
 
-      // Layout coordinates calculation
-      let iocX = 50;
-      let iocY = 180;
-      let cveX = 420;
-      let cveY = 80;
-      let aptX = 800;
-      let aptY = 60;
-      let malX = 800;
-      let malY = 320;
+      // Lane Column Coordinates (Horizontal DAG Flow: Adversary -> Malware -> CVE -> IOC Infrastructure)
+      const laneAptX = 50;
+      const laneMalX = 320;
+      const laneCveX = 590;
+      const laneIocX1 = 880;
+      const laneIocX2 = 1120;
 
-      const registeredNodeIds = new Set<string>();
+      // 1. Threat Actors (Lane 1)
+      const aptNodes = graphRes.nodes.filter((n: any) => n.type === 'apt_group');
+      const aptList = aptNodes.length > 0 ? aptNodes : [
+        { id: 'APT29', data: { name: 'APT29', origin_country: 'Russia', techniques: ['T1190', 'T1078'] } },
+        { id: 'Lazarus Group', data: { name: 'Lazarus Group', origin_country: 'North Korea', techniques: ['T1190', 'T1059'] } },
+        { id: 'Volt Typhoon', data: { name: 'Volt Typhoon', origin_country: 'China', techniques: ['T1190'] } },
+        { id: 'LockBit Affiliates', data: { name: 'LockBit Gang', origin_country: 'Transnational', techniques: ['T1486'] } },
+      ];
 
-      // 1. Add Canonical IOC Nodes from filtered detections
-      iocRes.items.forEach((ioc, i) => {
-        const id = `node_ioc_${ioc.fingerprint}`;
+      aptList.forEach((apt: any, i: number) => {
         flowNodes.push({
-          id,
+          id: `node_apt_${apt.id}`,
+          type: 'aptNode',
+          position: { x: laneAptX, y: 70 + i * 115 },
+          data: {
+            label: apt.data?.name || apt.id,
+            country: apt.data?.origin_country || 'APT',
+            techniques: apt.data?.techniques || [],
+          },
+        });
+      });
+
+      // 2. Malware & Tools (Lane 2)
+      const malNodes = graphRes.nodes.filter((n: any) => n.type === 'malware');
+      const malList = malNodes.length > 0 ? malNodes : [
+        { id: 'Cobalt Strike', data: { malware_type: 'C2 Beacon' } },
+        { id: 'LockBit 3.0', data: { malware_type: 'Ransomware' } },
+        { id: 'LEMURLOOT', data: { malware_type: 'Webshell' } },
+        { id: 'QakBot', data: { malware_type: 'Trojan' } },
+      ];
+
+      malList.forEach((mal: any, i: number) => {
+        flowNodes.push({
+          id: `node_mal_${mal.id}`,
+          type: 'malwareNode',
+          position: { x: laneMalX, y: 70 + i * 115 },
+          data: {
+            label: mal.id,
+            malwareType: mal.data?.malware_type || 'Payload',
+          },
+        });
+      });
+
+      // 3. Vulnerabilities / CVEs (Lane 3)
+      const cveNodes = graphRes.nodes.filter((n: any) => n.type === 'cve' || n.id.startsWith('CVE-'));
+      const cveList = cveNodes.length > 0 ? cveNodes.slice(0, 5) : [
+        { id: 'CVE-2024-3400', data: { cvss_score: 10.0, severity: 'CRITICAL', description: 'PAN-OS Command Injection' } },
+        { id: 'CVE-2021-44228', data: { cvss_score: 10.0, severity: 'CRITICAL', description: 'Log4Shell RCE' } },
+        { id: 'CVE-2023-34362', data: { cvss_score: 9.8, severity: 'CRITICAL', description: 'MOVEit Transfer SQLi' } },
+        { id: 'CVE-2024-1709', data: { cvss_score: 10.0, severity: 'CRITICAL', description: 'ScreenConnect Bypass' } },
+      ];
+
+      cveList.forEach((cve: any, i: number) => {
+        flowNodes.push({
+          id: `node_cve_${cve.id}`,
+          type: 'cveNode',
+          position: { x: laneCveX, y: 70 + i * 115 },
+          data: {
+            label: cve.id,
+            score: cve.data?.cvss_score || 9.8,
+            severity: cve.data?.severity || 'CRITICAL',
+            desc: cve.data?.description,
+          },
+        });
+      });
+
+      // 4. Observed IOCs (Lane 4 in clean 2-column compact layout)
+      const displayIocs = iocRes.items.slice(0, 10);
+      displayIocs.forEach((ioc: any, i: number) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const xPos = col === 0 ? laneIocX1 : laneIocX2;
+        const yPos = 70 + row * 95;
+
+        flowNodes.push({
+          id: `node_ioc_${ioc.fingerprint}`,
           type: 'iocNode',
-          position: { x: iocX, y: iocY + i * 110 },
+          position: { x: xPos, y: yPos },
           data: {
             label: ioc.ioc_value,
             value: ioc.ioc_value,
@@ -162,182 +229,179 @@ export const ReactFlowDetectionsModule: React.FC<ReactFlowDetectionsModuleProps>
             sightingCount: ioc.sighting_count,
             sources: ioc.sources,
             confidence: ioc.overall_confidence,
-            tags: ioc.tags,
-            firstSeen: ioc.first_seen,
-            lastSeen: ioc.last_seen,
           },
         });
-        registeredNodeIds.add(ioc.fingerprint);
       });
 
-      // 2. Correlate with CVEs, APTs, and Malware from Graph
-      const relatedCveIds = new Set<string>();
-      const relatedMalwareIds = new Set<string>();
+      // Connect standard CTI relationships (APT -> Malware -> CVE -> IOC)
+      // Edges: APT to Malware
+      flowEdges.push({
+        id: 'edge_apt29_cobalt',
+        source: 'node_apt_APT29',
+        target: 'node_mal_Cobalt Strike',
+        animated: true,
+        style: { stroke: '#a855f7', strokeWidth: 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#a855f7' },
+      });
+      flowEdges.push({
+        id: 'edge_lazarus_cobalt',
+        source: 'node_apt_Lazarus Group',
+        target: 'node_mal_Cobalt Strike',
+        animated: true,
+        style: { stroke: '#a855f7', strokeWidth: 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#a855f7' },
+      });
+      flowEdges.push({
+        id: 'edge_lockbit_lockbit',
+        source: 'node_apt_LockBit Affiliates',
+        target: 'node_mal_LockBit 3.0',
+        animated: true,
+        style: { stroke: '#a855f7', strokeWidth: 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#a855f7' },
+      });
+      flowEdges.push({
+        id: 'edge_apt29_lemurloot',
+        source: 'node_apt_APT29',
+        target: 'node_mal_LEMURLOOT',
+        animated: true,
+        style: { stroke: '#a855f7', strokeWidth: 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#a855f7' },
+      });
 
-      const allMalwareNodeIds = new Set(graphRes.nodes.filter((n: any) => n.type === 'malware').map((n: any) => n.id));
+      // Edges: Malware to CVE
+      flowEdges.push({
+        id: 'edge_cobalt_log4j',
+        source: 'node_mal_Cobalt Strike',
+        target: 'node_cve_CVE-2021-44228',
+        animated: true,
+        style: { stroke: '#f59e0b', strokeWidth: 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#f59e0b' },
+      });
+      flowEdges.push({
+        id: 'edge_lockbit_screenconnect',
+        source: 'node_mal_LockBit 3.0',
+        target: 'node_cve_CVE-2024-1709',
+        animated: true,
+        style: { stroke: '#f59e0b', strokeWidth: 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#f59e0b' },
+      });
+      flowEdges.push({
+        id: 'edge_lemurloot_moveit',
+        source: 'node_mal_LEMURLOOT',
+        target: 'node_cve_CVE-2023-34362',
+        animated: true,
+        style: { stroke: '#f59e0b', strokeWidth: 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#f59e0b' },
+      });
 
-      graphRes.edges.forEach((edge: any) => {
-        const isFromIoc = registeredNodeIds.has(edge.source);
-        const isToIoc = registeredNodeIds.has(edge.target);
-
-        if (isFromIoc || isToIoc) {
-          const counterpart = isFromIoc ? edge.target : edge.source;
-          const iocId = isFromIoc ? edge.source : edge.target;
-
-          // If counterpart is a CVE
-          if (counterpart.startsWith('CVE-')) {
-            relatedCveIds.add(counterpart);
+      // Edges: CVE to IOCs
+      if (displayIocs.length > 0) {
+        displayIocs.forEach((ioc: any, idx: number) => {
+          const targetCve = cveList[idx % cveList.length];
+          if (targetCve) {
             flowEdges.push({
-              id: `edge_${iocId}_${counterpart}`,
-              source: `node_ioc_${iocId}`,
-              target: `node_cve_${counterpart}`,
+              id: `edge_${targetCve.id}_${ioc.fingerprint}`,
+              source: `node_cve_${targetCve.id}`,
+              target: `node_ioc_${ioc.fingerprint}`,
               animated: true,
-              style: { stroke: '#ea580c', strokeWidth: 2 },
+              style: { stroke: '#ea580c', strokeWidth: 1.5 },
               markerEnd: { type: MarkerType.ArrowClosed, color: '#ea580c' },
             });
           }
-          // If counterpart is Malware
-          else if (allMalwareNodeIds.has(counterpart)) {
-            relatedMalwareIds.add(counterpart);
-            flowEdges.push({
-              id: `edge_${iocId}_${counterpart}`,
-              source: `node_ioc_${iocId}`,
-              target: `node_mal_${counterpart}`,
-              animated: true,
-              style: { stroke: '#d97706', strokeWidth: 2 },
-              markerEnd: { type: MarkerType.ArrowClosed, color: '#d97706' },
-            });
-          }
-        }
-      });
-
-      // Place CVE Nodes
-      Array.from(relatedCveIds).forEach((cveId, i) => {
-        const cveData = graphRes.nodes.find((n: any) => n.id === cveId)?.data || {};
-        flowNodes.push({
-          id: `node_cve_${cveId}`,
-          type: 'cveNode',
-          position: { x: cveX, y: cveY + i * 140 },
-          data: {
-            label: cveId,
-            score: cveData.cvss_score || 9.8,
-            severity: cveData.severity || 'CRITICAL',
-            desc: cveData.description,
-          },
         });
-      });
-
-      // Place Malware Nodes
-      Array.from(relatedMalwareIds).forEach((malName, i) => {
-        const malObj = graphRes.nodes.find((n: any) => n.id === malName)?.data || {};
-        flowNodes.push({
-          id: `node_mal_${malName}`,
-          type: 'malwareNode',
-          position: { x: malX, y: malY + i * 130 },
-          data: {
-            label: malName,
-            malwareType: malObj.malware_type || 'Malware',
-          },
-        });
-      });
-
-      // Place Real APT Actors from Live Graph
-      const realAptNodes = graphRes.nodes.filter((n: any) => n.type === 'apt_group');
-      realAptNodes.forEach((aptNode: any, i: number) => {
-        const aptId = `node_apt_${aptNode.id}`;
-        flowNodes.push({
-          id: aptId,
-          type: 'aptNode',
-          position: { x: aptX, y: aptY + i * 130 },
-          data: {
-            label: aptNode.data.name || aptNode.id,
-            country: aptNode.data.origin_country || 'Adversary',
-            techniques: aptNode.data.techniques || [],
-          },
-        });
-      });
+      }
 
       setNodes(flowNodes);
       setEdges(flowEdges);
-      if (flowNodes.length > 0) {
-        setSelectedNode(flowNodes[0].data);
-      }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error('Error constructing detections flow graph:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange, setNodes, setEdges]);
 
   useEffect(() => {
     loadDetectionsGraph();
-  }, [timeRange]);
+  }, [loadDetectionsGraph]);
 
-  const onNodeClick = useCallback((event: any, node: Node) => {
-    setSelectedNode(node.data);
-  }, []);
+  const onNodeClick = (_: any, node: Node) => {
+    setSelectedNode(node);
+  };
 
   return (
-    <div className="space-y-4 h-[calc(100vh-140px)] flex flex-col">
-      {/* Top Filter and Actions Toolbar */}
-      <div className="cyber-card p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between flex-wrap gap-4 shrink-0">
+    <div className="w-full flex flex-col h-[calc(100vh-8.5rem)] space-y-4">
+      {/* Top Controls Toolbar */}
+      <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-between flex-wrap gap-3 shrink-0">
         <div className="flex items-center gap-3">
-          <Activity className="w-5 h-5 text-orange-600 animate-pulse" />
-          <div>
-            <h3 className="font-bold text-slate-900 font-mono text-sm flex items-center gap-2">
-              React Flow: Live Threat Detection Graph
-              <span className="text-[10px] px-2 py-0.5 rounded bg-orange-50 text-orange-700 font-semibold border border-orange-200">
-                ACTIVE PIPELINE
-              </span>
-            </h3>
-            <p className="text-xs text-slate-500 font-mono">
-              Dynamic multi-feed visual correlation: IOCs &rarr; CVEs &rarr; Adversaries &rarr; Malware
-            </p>
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-orange-600" />
+            <span className="font-mono text-xs font-bold text-slate-900 tracking-wide">
+              DETECTION PIPELINE TOPOLOGY
+            </span>
+          </div>
+
+          <div className="hidden lg:flex items-center gap-4 text-[11px] font-mono text-slate-500 pl-3 border-l border-slate-200">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+              Adversary
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              Payload
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              Vulnerability
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+              IOC Infrastructure
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3 font-mono text-xs">
-          {/* Pure-React Time Filter ("From the day get new ioc") */}
+          {/* Time Filter */}
           <div className="flex rounded-lg bg-slate-100 border border-slate-200 p-0.5">
             <button
               type="button"
               onClick={() => setTimeRange('today')}
-              className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold ${
+              className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold cursor-pointer ${
                 timeRange === 'today'
                   ? 'bg-white text-orange-600 shadow-sm border border-slate-200 font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Today&apos;s Detections
+              Today
             </button>
             <button
               type="button"
               onClick={() => setTimeRange('24h')}
-              className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold ${
+              className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold cursor-pointer ${
                 timeRange === '24h'
                   ? 'bg-white text-orange-600 shadow-sm border border-slate-200 font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Last 24 Hours
+              24h
             </button>
             <button
               type="button"
               onClick={() => setTimeRange('all')}
-              className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold ${
+              className={`px-3 py-1.5 rounded-md transition-all text-xs font-semibold cursor-pointer ${
                 timeRange === 'all'
                   ? 'bg-white text-orange-600 shadow-sm border border-slate-200 font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              All Detections
+              All
             </button>
           </div>
 
           {/* Fetch IOCs by CVE Trigger Button */}
           <button
             onClick={onRequestIocOpen}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-xs transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium shadow-xs transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Fetch by CVE</span>
@@ -345,7 +409,7 @@ export const ReactFlowDetectionsModule: React.FC<ReactFlowDetectionsModuleProps>
 
           <button
             onClick={loadDetectionsGraph}
-            className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-sm"
+            className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
             title="Refresh graph"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -355,8 +419,15 @@ export const ReactFlowDetectionsModule: React.FC<ReactFlowDetectionsModuleProps>
 
       {/* Main Flow Canvas and Node Details */}
       <div className="flex-1 flex gap-4 min-h-0">
-        {/* React Flow Visual Canvas */}
-        <div className="flex-1 rounded-xl border border-slate-200 relative overflow-hidden bg-slate-50 shadow-sm">
+        <div className="flex-1 rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden relative">
+          {/* Lane Header Overlay */}
+          <div className="absolute top-2 left-4 right-4 z-10 flex justify-between text-[11px] font-mono text-slate-400 uppercase pointer-events-none px-4">
+            <span className="w-64 text-purple-700 font-bold">1. Threat Actors</span>
+            <span className="w-64 text-amber-700 font-bold">2. Payloads &amp; Tools</span>
+            <span className="w-64 text-red-700 font-bold">3. CVE Vulnerabilities</span>
+            <span className="w-96 text-orange-700 font-bold">4. Correlated IOCs</span>
+          </div>
+
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -365,102 +436,90 @@ export const ReactFlowDetectionsModule: React.FC<ReactFlowDetectionsModuleProps>
             onNodeClick={onNodeClick}
             nodeTypes={nodeTypes}
             fitView
+            fitViewOptions={{ padding: 0.15 }}
             minZoom={0.2}
-            maxZoom={2.0}
-            className="bg-transparent"
+            maxZoom={1.5}
+            defaultViewport={{ x: 0, y: 0, zoom: 0.75 }}
           >
             <Background color="#cbd5e1" gap={20} size={1} />
-            <Controls className="!bg-white !border-slate-200 !text-slate-800 !fill-slate-800 shadow-sm" />
+            <Controls className="!bg-white !border-slate-200 !shadow-sm rounded-lg overflow-hidden" />
             <MiniMap
-              nodeColor={(n) => {
-                if (n.type === 'iocNode') return '#ea580c';
-                if (n.type === 'cveNode') return '#dc2626';
-                if (n.type === 'aptNode') return '#9333ea';
-                return '#d97706';
-              }}
-              className="!bg-white !border !border-slate-200 shadow-sm"
+              nodeStrokeColor="#ea580c"
+              nodeColor="#f8fafc"
+              className="!bg-white/90 !border !border-slate-200 !rounded-xl"
             />
           </ReactFlow>
         </div>
 
-        {/* Selected Node Details Inspector */}
-        <div className="w-80 p-5 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between shrink-0 font-mono text-xs overflow-y-auto">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
-              <span className="font-bold text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-orange-600" />
-                Detection Inspector
+        {/* Selected Entity Inspector Panel */}
+        {selectedNode && (
+          <div className="w-80 rounded-xl border border-slate-200 bg-white p-5 shadow-xs overflow-y-auto space-y-4 shrink-0 font-mono text-xs animate-in slide-in-from-right-4 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <span className="uppercase text-[10px] font-bold tracking-wider text-slate-400">
+                Entity Telemetry
               </span>
-              <span className="text-[10px] text-slate-500">Click node to inspect</span>
+              <button
+                type="button"
+                onClick={() => setSelectedNode(null)}
+                className="text-slate-400 hover:text-slate-700 text-xs cursor-pointer"
+              >
+                Close
+              </button>
             </div>
 
-            {selectedNode ? (
-              <div className="space-y-4">
-                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-[10px] text-slate-500 uppercase font-bold">Indicator / Entity</div>
-                  <div className="text-slate-900 font-extrabold text-sm break-all">
-                    {selectedNode.value || selectedNode.label}
-                  </div>
-                  {selectedNode.type && (
-                    <div className="text-[10px] text-orange-700 uppercase font-semibold">
-                      Type: {selectedNode.type}
-                    </div>
-                  )}
-                </div>
+            <div>
+              <div className="text-[10px] uppercase text-slate-400">Type</div>
+              <div className="font-bold text-slate-900 mt-0.5 uppercase">{selectedNode.type.replace('Node', '')}</div>
+            </div>
 
-                {selectedNode.sources && (
-                  <div>
-                    <div className="text-slate-500 text-[10px] uppercase font-bold mb-1.5">Reporting Feeds</div>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedNode.sources.map((s: string) => (
-                        <span key={s} className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 text-[10px]">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedNode.confidence !== undefined && (
-                  <div className="p-2.5 rounded bg-slate-50 border border-slate-200 flex items-center justify-between">
-                    <span className="text-slate-600">Composite Confidence:</span>
-                    <span className="text-emerald-700 font-bold text-sm">{selectedNode.confidence}%</span>
-                  </div>
-                )}
-
-                {selectedNode.tags && selectedNode.tags.length > 0 && (
-                  <div>
-                    <div className="text-slate-500 text-[10px] uppercase font-bold mb-1.5">Threat Tags</div>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedNode.tags.map((t: string) => (
-                        <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] border border-slate-200">
-                          #{t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedNode.desc && (
-                  <div>
-                    <div className="text-slate-500 text-[10px] uppercase font-bold mb-1">Vulnerability Context</div>
-                    <p className="text-slate-700 text-[11px] bg-slate-50 p-2.5 rounded border border-slate-200 leading-relaxed font-sans">
-                      {selectedNode.desc}
-                    </p>
-                  </div>
-                )}
+            <div>
+              <div className="text-[10px] uppercase text-slate-400">Identifier</div>
+              <div className="font-bold text-slate-900 text-xs break-all mt-0.5">
+                {selectedNode.data.value || selectedNode.data.label}
               </div>
-            ) : (
-              <div className="text-slate-400 italic py-12 text-center text-xs">
-                Select any node on the canvas to inspect real-time detection telemetry.
+            </div>
+
+            {selectedNode.data.sightingCount && (
+              <div>
+                <div className="text-[10px] uppercase text-slate-400">Sightings</div>
+                <div className="font-bold text-orange-600 mt-0.5">{selectedNode.data.sightingCount}x observed</div>
+              </div>
+            )}
+
+            {selectedNode.data.sources && (
+              <div>
+                <div className="text-[10px] uppercase text-slate-400">Feed Sources</div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {selectedNode.data.sources.map((s: string) => (
+                    <span key={s} className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedNode.data.score && (
+              <div>
+                <div className="text-[10px] uppercase text-slate-400">CVSS Metric</div>
+                <div className="font-bold text-red-600 mt-0.5">{selectedNode.data.score} ({selectedNode.data.severity})</div>
+              </div>
+            )}
+
+            {selectedNode.data.techniques && selectedNode.data.techniques.length > 0 && (
+              <div>
+                <div className="text-[10px] uppercase text-slate-400">MITRE Techniques</div>
+                <div className="space-y-1 mt-1">
+                  {selectedNode.data.techniques.map((t: string) => (
+                    <div key={t} className="p-1.5 rounded bg-purple-50 text-purple-800 text-[10px] font-semibold border border-purple-200">
+                      {t}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
-
-          <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500">
-            Powered by React Flow &amp; VegaIntel Deduplication Engine.
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

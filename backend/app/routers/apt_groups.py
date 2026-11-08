@@ -61,6 +61,15 @@ def get_apt_group_detail(group_id: str, db=Depends(get_db)):
         ]
     }, {"_id": 0}))
 
+    if not iocs:
+        malware_names = group.get("associated_malware", [])
+        iocs = list(db.iocs.find({
+            "$or": [
+                {"associated_malware": {"$in": malware_names}},
+                {"tags": {"$in": [gid.lower(), gname.lower()]}}
+            ]
+        }, {"_id": 0}))
+
     # Targeted CVEs
     cve_relations = list(db.relationships.find({
         "source_id": {"$in": [gid, gname]},

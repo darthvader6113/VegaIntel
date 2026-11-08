@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Portal } from '../common/Portal';
 import {
   Search,
   Database,
@@ -336,9 +338,22 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
       </div>
 
       {/* Sighting History and Deduplication Modal */}
-      {selectedDetail && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-          <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      <Portal>
+        <AnimatePresence>
+          {selectedDetail && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="w-full max-w-3xl max-h-[85vh] rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl"
+              >
             {/* Header */}
             <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/80 shrink-0">
               <div className="min-w-0 pr-4">
@@ -399,9 +414,11 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
                 ))}
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
-    </div>
-  );
+    </AnimatePresence>
+  </Portal>
+</div>
+);
 };

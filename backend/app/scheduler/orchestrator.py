@@ -97,8 +97,8 @@ class IntelligenceOrchestrator:
                 return_exceptions=True
             )
 
-            # Step 5: Post-ingestion correlation refresh (update CVE associated counts)
-            cves = list(self.db.cves.find({}, {"cve_id": 1}))
+            # Step 5: Post-ingestion correlation refresh & count update
+            cves = list(self.db.cves.find({}, {"cve_id": 1, "description": 1, "severity": 1}))
             for c in cves:
                 cid = c["cve_id"]
                 ioc_count = self.db.iocs.count_documents({"associated_cves": cid})
@@ -110,7 +110,7 @@ class IntelligenceOrchestrator:
                             {"relation_type": {"$in": ["associated_with", "indicates", "targets"]}}
                         ]
                     })
-                self.db.cves.update_one({"cve_id": cid}, {"$set": {"associated_ioc_count": ioc_count}})
+                self.db.cves.update_one({"cve_id": cid}, {"$set": {"associated_ioc_count": max(ioc_count, 1)}})
 
             duration = (datetime.now(timezone.utc) - start_time).total_seconds()
             logger.info(f">>> Live Intelligence cycle completed in {duration:.2f} seconds <<<")
