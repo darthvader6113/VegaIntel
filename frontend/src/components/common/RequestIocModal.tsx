@@ -18,6 +18,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { api } from '../../services/api';
+import { copyToClipboard } from '../../utils/clipboard';
 
 interface RequestIocModalProps {
   isOpen: boolean;
@@ -88,12 +89,6 @@ export const RequestIocModal: React.FC<RequestIocModalProps> = ({ isOpen, onClos
     }
   };
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedKey(id);
-    setTimeout(() => setCopiedKey(null), 2000);
-  };
-
   const resetModal = () => {
     setCveInput('');
     setLoading(false);
@@ -119,20 +114,28 @@ export const RequestIocModal: React.FC<RequestIocModalProps> = ({ isOpen, onClos
     }
   };
 
+  const handleCopy = async (text: string, key: string) => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    }
+  };
+
   return (
     <Portal>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+        className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto w-screen h-screen"
       >
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
         transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="w-full max-w-2xl max-h-[90vh] rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xl flex flex-col"
+        className="w-full max-w-2xl max-h-[90vh] rounded-lg border border-slate-200 bg-white overflow-hidden shadow-2xl flex flex-col"
       >
         {/* Header */}
         <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/80 shrink-0">
@@ -331,7 +334,7 @@ export const RequestIocModal: React.FC<RequestIocModalProps> = ({ isOpen, onClos
                         </span>
                         <button
                           type="button"
-                          onClick={() => copyToClipboard(ioc.ioc_value, `ioc-${idx}`)}
+                          onClick={() => handleCopy(ioc.ioc_value, `ioc-${idx}`)}
                           className="p-1 text-slate-400 hover:text-slate-800"
                           title="Copy IOC"
                         >

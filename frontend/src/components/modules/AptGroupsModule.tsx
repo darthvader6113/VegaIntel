@@ -4,6 +4,7 @@ import { Users, Globe, Target, Terminal, X, Database, ShieldAlert, Binary, Searc
 import { Portal } from '../common/Portal';
 import { APTGroup } from '../../types';
 import { api } from '../../services/api';
+import { copyToClipboard } from '../../utils/clipboard';
 
 export const AptGroupsModule: React.FC = () => {
   const [groups, setGroups] = useState<APTGroup[]>([]);
@@ -36,16 +37,18 @@ export const AptGroupsModule: React.FC = () => {
     }
   };
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedKey(id);
-    setTimeout(() => setCopiedKey(null), 2000);
+  const handleCopy = async (text: string, id: string) => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopiedKey(id);
+      setTimeout(() => setCopiedKey(null), 2000);
+    }
   };
 
   return (
     <div className="w-full space-y-6">
       {/* Search Header */}
-      <div className="p-4 rounded-xl border border-slate-200/90 bg-white shadow-xs flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 rounded-lg border border-slate-200/90 bg-white shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="relative flex-1 min-w-[280px]">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -77,7 +80,7 @@ export const AptGroupsModule: React.FC = () => {
             <div
               key={apt.group_id}
               onClick={() => openGroup(apt.group_id)}
-              className="p-5 rounded-xl border border-slate-200/90 bg-white hover:border-purple-300 hover:shadow-md cursor-pointer transition-all space-y-3.5 flex flex-col justify-between group"
+              className="p-4 rounded-lg border border-slate-200/90 bg-white hover:border-purple-300 hover:shadow-xs cursor-pointer transition-all space-y-3 flex flex-col justify-between group"
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -151,14 +154,14 @@ export const AptGroupsModule: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+              className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto w-screen h-screen"
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.96, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 8 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className="w-full max-w-3xl max-h-[85vh] rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl"
+                className="w-full max-w-3xl max-h-[85vh] rounded-lg border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl"
               >
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/80 shrink-0">
@@ -275,7 +278,7 @@ export const AptGroupsModule: React.FC = () => {
                         </div>
                         <button
                           type="button"
-                          onClick={() => copyToClipboard(ioc.ioc_value, ioc.fingerprint)}
+                          onClick={() => handleCopy(ioc.ioc_value, ioc.fingerprint)}
                           className="p-1 text-slate-400 hover:text-slate-800 shrink-0"
                           title="Copy IOC"
                         >

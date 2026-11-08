@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { IOC } from '../../types';
 import { api } from '../../services/api';
+import { copyToClipboard } from '../../utils/clipboard';
 
 interface IocRepositoryModuleProps {
   onRequestIocOpen?: () => void;
@@ -64,10 +65,12 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
     }
   };
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedKey(id);
-    setTimeout(() => setCopiedKey(null), 2000);
+  const handleCopy = async (text: string, id: string) => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopiedKey(id);
+      setTimeout(() => setCopiedKey(null), 2000);
+    }
   };
 
   const getTypeColor = (type: string) => {
@@ -270,7 +273,7 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
                         </span>
                         <button
                           type="button"
-                          onClick={() => copyToClipboard(ioc.ioc_value, ioc.fingerprint)}
+                          onClick={() => handleCopy(ioc.ioc_value, ioc.fingerprint)}
                           title="Copy indicator value"
                           className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-800 transition-opacity shrink-0"
                         >
@@ -345,14 +348,14 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+              className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto w-screen h-screen"
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.96, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 8 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className="w-full max-w-3xl max-h-[85vh] rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl"
+                className="w-full max-w-3xl max-h-[85vh] rounded-lg border border-slate-200 bg-white overflow-hidden flex flex-col shadow-2xl"
               >
             {/* Header */}
             <div className="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/80 shrink-0">
