@@ -44,7 +44,7 @@ def list_iocs(
     min_sightings: Optional[int] = Query(None, ge=1),
     threat_type: Optional[str] = Query(None),
     status_filter: Optional[str] = Query(None, description="active, false_positive"),
-    limit: int = 100,
+    limit: Optional[int] = Query(None, description="Limit records. Leave empty or 0 to retrieve all ingested IOCs"),
     skip: int = 0,
     db=Depends(get_db)
 ):
@@ -84,7 +84,8 @@ def list_iocs(
         query["last_seen"] = {"$gte": cutoff}
 
     total = db.iocs.count_documents(query)
-    items = list(db.iocs.find(query, {"_id": 0}).sort("last_seen", -1).skip(skip).limit(limit))
+    effective_limit = limit if (limit is not None and limit > 0) else 100000
+    items = list(db.iocs.find(query, {"_id": 0}).sort("last_seen", -1).skip(skip).limit(effective_limit))
 
     return {
         "total": total,

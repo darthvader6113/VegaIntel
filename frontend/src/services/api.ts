@@ -88,11 +88,13 @@ export const api = {
   },
 
   // CVEs
-  async getCVEs(params?: { q?: string; severity?: string; has_poc?: boolean }): Promise<{ total: number; items: CVE[] }> {
+  async getCVEs(params?: { q?: string; severity?: string; has_poc?: boolean; limit?: number; skip?: number }): Promise<{ total: number; items: CVE[] }> {
     const query = new URLSearchParams();
     if (params?.q) query.append('q', params.q);
     if (params?.severity) query.append('severity', params.severity);
     if (params?.has_poc !== undefined) query.append('has_poc', String(params.has_poc));
+    if (params?.limit !== undefined) query.append('limit', String(params.limit));
+    if (params?.skip !== undefined) query.append('skip', String(params.skip));
     const res = await fetch(`${API_BASE}/cves/?${query.toString()}`, {
       headers: { ...getAuthHeader() },
     });
@@ -118,6 +120,7 @@ export const api = {
     threat_type?: string;
     status_filter?: string;
     limit?: number;
+    skip?: number;
   }): Promise<{ total: number; time_range: string; items: IOC[] }> {
     const query = new URLSearchParams();
     if (params?.q) query.append('q', params.q);
@@ -127,7 +130,8 @@ export const api = {
     if (params?.min_confidence) query.append('min_confidence', String(params.min_confidence));
     if (params?.threat_type) query.append('threat_type', params.threat_type);
     if (params?.status_filter) query.append('status_filter', params.status_filter);
-    if (params?.limit) query.append('limit', String(params.limit));
+    if (params?.limit !== undefined) query.append('limit', String(params.limit));
+    if (params?.skip !== undefined) query.append('skip', String(params.skip));
     const res = await fetch(`${API_BASE}/iocs/?${query.toString()}`, {
       headers: { ...getAuthHeader() },
     });

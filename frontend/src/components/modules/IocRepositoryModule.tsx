@@ -27,6 +27,9 @@ interface IocRepositoryModuleProps {
 
 export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequestIocOpen, filters }) => {
   const [iocs, setIocs] = useState<IOC[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number | 'all'>(100);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [selectedSource, setSelectedSource] = useState('');
@@ -49,8 +52,11 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
         source: selectedSource || undefined,
         time_range: timeRange !== 'all' ? timeRange : undefined,
         min_confidence: activeConfidence > 0 ? activeConfidence : undefined,
+        limit: 10000,
       });
       setIocs(res.items);
+      setTotalCount(res.total);
+      setCurrentPage(1);
     } catch (e) {
       console.error(e);
     } finally {
@@ -95,6 +101,12 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
         return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
+
+  const displayedIocs = pageSize === 'all'
+    ? iocs
+    : iocs.slice((currentPage - 1) * (pageSize as number), currentPage * (pageSize as number));
+
+  const totalPages = pageSize === 'all' ? 1 : Math.ceil(iocs.length / (pageSize as number));
 
   return (
     <div className="w-full space-y-6">
@@ -220,8 +232,8 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
             <span className="font-bold text-slate-800 w-7 text-right">{minConfidence}%</span>
           </div>
 
-          <span className="text-xs text-slate-400 pl-2 border-l border-slate-200">
-            {iocs.length} Indicators
+          <span className="text-xs text-slate-600 font-medium pl-2 border-l border-slate-200">
+            {iocs.length} Ingested IOCs {totalCount > iocs.length ? `(${totalCount} in DB)` : ''}
           </span>
         </div>
       </div>
@@ -261,7 +273,7 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {iocs.map((ioc) => (
+                {displayedIocs.map((ioc) => (
                   <tr
                     key={ioc.fingerprint}
                     className="hover:bg-slate-50/80 transition-colors group"
@@ -345,6 +357,58 @@ export const IocRepositoryModule: React.FC<IocRepositoryModuleProps> = ({ onRequ
           </div>
         )}
       </div>
+
+      {/* IOC Pagination Bar */}
+      {iocs.length > 0 && (
+        <div className="p-4 rounded-xl border border-slate-200/90 bg-white shadow-xs flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+          <div className="flex items-center gap-2 text-slate-600 flex-wrap">
+            <span className="font-semibold text-slate-700">Display:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                const val = e.target.value === 'all' ? 'all' : Number(e.target.value);
+                setPageSize(val);
+                setCurrentPage(1);
+              }}
+              className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-slate-800 font-semibold focus:outline-none focus:border-orange-500 shadow-2xs"
+            >
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+              <option value={250}>250 per page</option>
+              <option value={500}>500 per page</option>
+              <option value="all">Show All ({iocs.length} Indicators)</option>
+            </select>
+            <span className="text-slate-400">|</span>
+            <span className="text-slate-500 font-medium">
+              Showing {displayedIocs.length} of {iocs.length} indicators {totalCount > iocs.length ? `(${totalCount} total in database)` : ''}
+            </span>
+          </div>
+
+          {pageSize !== 'all' && totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="px-3 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors shadow-2xs"
+              >
+                Previous
+              </button>
+              <span className="text-slate-700 font-semibold px-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="px-3 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors shadow-2xs"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Sighting History and Deduplication Modal */}
       <Portal>

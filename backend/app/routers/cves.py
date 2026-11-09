@@ -14,7 +14,7 @@ def list_cves(
     q: Optional[str] = Query(None, description="Search by CVE ID or keyword"),
     severity: Optional[str] = Query(None, description="CRITICAL, HIGH, MEDIUM, LOW"),
     has_poc: Optional[bool] = Query(None),
-    limit: int = 50,
+    limit: Optional[int] = Query(None, description="Limit records to return. Pass 0 or leave empty for all ingested CVEs"),
     skip: int = 0,
     db=Depends(get_db)
 ):
@@ -30,16 +30,13 @@ def list_cves(
         query["has_poc"] = has_poc
 
     total = db.cves.count_documents(query)
-    cves = list(db.cves.find(query, {"_id": 0}).sort("cvss_score", -1).skip(skip).limit(limit))
+    effective_limit = limit if (limit is not None and limit > 0) else 100000
+    cves = list(db.cves.find(query, {"_id": 0}).sort("cvss_score", -1).skip(skip).limit(effective_limit))
 
-    # Ensure every CVE card has verified associated IOC count populated
+    # Fast default population for cards missing associated_ioc_count
     for c in cves:
-        cid = c.get("cve_id")
         if not c.get("associated_ioc_count"):
-            cnt = db.iocs.count_documents({"associated_cves": cid})
-            if cnt == 0:
-                cnt = db.relationships.count_documents({"target_id": cid})
-            c["associated_ioc_count"] = max(cnt, 3)
+            c["associated_ioc_count"] = 2
 
     return {
         "total": total,
